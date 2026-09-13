@@ -2,6 +2,8 @@ import os
 import hashlib
 import time
 
+from cleaner import is_link
+
 
 def _hash_file(path, partial=False, chunk=1024 * 1024):
     h = hashlib.blake2b(digest_size=16)
@@ -19,6 +21,21 @@ def _hash_file(path, partial=False, chunk=1024 * 1024):
         return h.hexdigest()
     except (PermissionError, OSError):
         return None
+
+
+def _unique_files(paths):
+    """Drop paths that point at the same file (hardlinks, same file seen twice)."""
+    seen, out = set(), []
+    for p in paths:
+        try:
+            st = os.stat(p)
+            key = (st.st_dev, st.st_ino) if st.st_ino else os.path.normcase(os.path.realpath(p))
+        except OSError:
+            continue
+        if key not in seen:
+            seen.add(key)
+            out.append(p)
+    return out
 
 
 class DuplicateEngine:
@@ -39,26 +56,36 @@ class DuplicateEngine:
         by_size = {}
         scanned = 0
         last = time.time()
-        for dirpath, dirnames, filenames in os.walk(self.root):
+        stack = [self.root]
+        while stack:
             if self.stop.is_set():
                 self.q.put(("dup_cancelled", None)); return
-            low = dirpath.lower()
+            cur = stack.pop()
+            low = cur.lower()
             if "\\windows\\winsxs" in low or "\\$recycle.bin" in low:
-                dirnames[:] = []
                 continue
-            for fn in filenames:
-                fp = os.path.join(dirpath, fn)
+            try:
+                with os.scandir(cur) as it:
+                    entries = list(it)
+            except OSError:
+                continue
+            for e in entries:
+                if is_link(e):
+                    continue
                 try:
-                    sz = os.path.getsize(fp)
+                    if e.is_dir(follow_symlinks=False):
+                        stack.append(e.path)
+                        continue
+                    sz = e.stat(follow_symlinks=False).st_size
                 except OSError:
                     continue
                 if sz < self.min_size:
                     continue
-                by_size.setdefault(sz, []).append(fp)
+                by_size.setdefault(sz, []).append(e.path)
                 scanned += 1
                 if time.time() - last > 0.2:
                     last = time.time()
-                    self.q.put(("dup_progress", f"المسح: {scanned:,} ملف مرشح | {dirpath[:60]}"))
+                    self.q.put(("dup_progress", f"المسح: {scanned:,} ملف مرشح"))
 
         candidates = {s: ps for s, ps in by_size.items() if len(ps) > 1}
 
@@ -69,6 +96,9 @@ class DuplicateEngine:
             if self.stop.is_set():
                 self.q.put(("dup_cancelled", None)); return
             done += 1
+            paths = _unique_files(paths)
+            if len(paths) < 2:
+                continue
             partial = {}
             for p in paths:
                 ph = _hash_file(p, partial=True)
@@ -83,7 +113,7 @@ class DuplicateEngine:
                         groups.setdefault((sz, fh), []).append(p)
             if done % 5 == 0:
                 self.q.put(("dup_progress",
-                            f"تحليل البصمات: {done}/{total_groups} مجموعة حجم"))
+                            f"تحليل البصمات: {done} من {total_groups} مجموعة حجم"))
 
         result = []
         wasted = 0

@@ -1,4 +1,4 @@
-# Storage Analyzer
+# Cleanix
 
 اداة مفتوحة المصدر لتحليل مساحة التخزين على ويندوز وايجاد ما يستهلك القرص وحذفه بامان.
 
@@ -28,7 +28,7 @@ pip install -r requirements.txt
 ## التشغيل
 
 ```
-python StorageAnalyzer.py
+python Cleanix.py
 ```
 
 او شغل الملف Run.bat
