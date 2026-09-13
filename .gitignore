@@ -3,3 +3,4 @@ __pycache__/
 v2/build/
 v2/dist/
 v2/Output/
+v2/msix/out/
