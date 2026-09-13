@@ -14,10 +14,13 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['win32ui', 'dde', 'pywin'],
     noarchive=False,
     optimize=0,
 )
+# pywin32's MFC GUI and Tcl timezone data are never used by the app
+a.binaries = [b for b in a.binaries if 'Pythonwin' not in b[0] and 'mfc140' not in b[0].lower()]
+a.datas = [d for d in a.datas if 'tzdata' not in d[0] and not d[0].startswith('Pythonwin')]
 pyz = PYZ(a.pure)
 
 exe = EXE(
