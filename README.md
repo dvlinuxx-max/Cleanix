@@ -6,6 +6,12 @@
 
 <p align="center">برنامج لويندوز يكشف ما يستهلك مساحة القرص، ويساعدك على تنظيفها دون أن تحذف شيئاً مهماً.</p>
 
+<p align="center">
+  <a href="https://apps.microsoft.com/detail/9NV81Z29GK9R">
+    <img src="https://get.microsoft.com/images/en-us%20dark.svg" alt="متوفر على متجر مايكروسوفت" height="48">
+  </a>
+</p>
+
 ![واجهة Cleanix](v2/msix/store/screenshots/02-folders.png)
 
 ## لماذا كتبته
@@ -25,12 +31,16 @@
 
 ## التحميل
 
+**الطريقة الموصى بها — متجر مايكروسوفت:**
+
+نزّل البرنامج مباشرة من [متجر مايكروسوفت](https://apps.microsoft.com/detail/9NV81Z29GK9R)، ويُثبّت ويُحدّث تلقائياً.
+
+**بديل — من GitHub:**
+
 من صفحة [الإصدارات](https://github.com/dvlinuxx-max/Cleanix/releases/latest):
 
 - `Cleanix-Setup-2.2.0.exe` ملف التثبيت
 - `Cleanix-2.2.0-portable.exe` نسخة محمولة تعمل مباشرة دون تثبيت
-
-الملفات غير موقعة رقمياً حتى الآن، لذا قد يظهر تنبيه SmartScreen عند التشغيل. اضغط More info ثم Run anyway.
 
 ## التشغيل من الكود المصدري
 
