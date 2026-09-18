@@ -18,7 +18,7 @@ sys.path.insert(0, HERE)
 import make_assets  # noqa: E402
 
 
-def sdk_tool(name):
+def sdkTool(name):
     hits = sorted(glob.glob(rf"C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64\{name}"))
     if not hits:
         sys.exit(f"{name} not found, install the Windows SDK")
@@ -35,7 +35,7 @@ def main():
     ap.add_argument("--name", required=True)
     ap.add_argument("--publisher", required=True)
     ap.add_argument("--display", required=True)
-    ap.add_argument("--version", default="2.2.0.0")
+    ap.add_argument("--version", default="2.3.0.0")
     ap.add_argument("--skip-build", action="store_true")
     args = ap.parse_args()
     if not args.version.endswith(".0"):
@@ -61,16 +61,16 @@ def main():
         f.write(manifest)
 
     priconfig = os.path.join(work, "priconfig.xml")
-    run([sdk_tool("makepri.exe"), "createconfig", "/cf", priconfig, "/dq", "ar", "/o"])
-    run([sdk_tool("makepri.exe"), "new", "/pr", layout, "/cf", priconfig,
+    run([sdkTool("makepri.exe"), "createconfig", "/cf", priconfig, "/dq", "ar", "/o"])
+    run([sdkTool("makepri.exe"), "new", "/pr", layout, "/cf", priconfig,
          "/mn", os.path.join(layout, "AppxManifest.xml"), "/of", os.path.join(layout, "resources.pri"), "/o"])
 
-    out_dir = os.path.join(HERE, "out")
-    os.makedirs(out_dir, exist_ok=True)
+    outDir = os.path.join(HERE, "out")
+    os.makedirs(outDir, exist_ok=True)
     msix = os.path.join(work, f"Cleanix_{args.version}_x64.msix")
-    run([sdk_tool("makeappx.exe"), "pack", "/d", layout, "/p", msix, "/o"])
-    shutil.copy2(msix, out_dir)
-    print("package:", os.path.join(out_dir, os.path.basename(msix)))
+    run([sdkTool("makeappx.exe"), "pack", "/d", layout, "/p", msix, "/o"])
+    shutil.copy2(msix, outDir)
+    print("package:", os.path.join(outDir, os.path.basename(msix)))
     print("layout:", layout)
 
 

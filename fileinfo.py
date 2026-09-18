@@ -4,7 +4,7 @@ from ctypes import wintypes
 import datetime
 
 
-_EXT_MAP = {
+extMap = {
     "exe": ("برنامج تنفيذي", "exec"),
     "msi": ("حزمة تثبيت", "exec"),
     "dll": ("مكتبة نظام او برنامج", "system"),
@@ -52,7 +52,7 @@ _EXT_MAP = {
 }
 
 
-def _category_label(cat):
+def categoryLabel(cat):
     return {
         "exec": "برنامج تنفيذي",
         "system": "ملف نظام او برنامج",
@@ -67,7 +67,7 @@ def _category_label(cat):
     }.get(cat, "غير مصنف")
 
 
-def get_publisher_info(path):
+def getPublisherInfo(path):
     try:
         ver = ctypes.windll.version
         size = ver.GetFileVersionInfoSizeW(ctypes.c_wchar_p(path), None)
@@ -98,7 +98,7 @@ def get_publisher_info(path):
         return {}
 
 
-def _owner_from_path(path):
+def ownerFromPath(path):
     np = os.path.normpath(path)
     low = np.lower()
     parts = np.split(os.sep)
@@ -150,7 +150,7 @@ def _owner_from_path(path):
     return (None, None)
 
 
-def _is_junk_location(path):
+def isJunkLocation(path):
     low = os.path.normpath(path).lower()
     markers = ("\\temp\\", "\\tmp\\", "\\inetcache\\", "\\cache\\",
                "\\crashdumps\\", "\\$recycle.bin\\", "\\windows\\temp\\",
@@ -166,7 +166,7 @@ def analyze(path):
         "is_dir": os.path.isdir(path),
         "size": 0, "modified": "-", "created": "-",
         "ext": "", "type_desc": "غير معروف", "category": "other",
-        "category_label": _category_label("other"),
+        "category_label": categoryLabel("other"),
         "owner": "غير معروف", "owner_note": "",
         "publisher": "", "product": "", "description": "", "version": "",
         "safe": "review",
@@ -191,19 +191,19 @@ def analyze(path):
     else:
         ext = os.path.splitext(path)[1].lstrip(".").lower()
         info["ext"] = ext
-        desc, cat = _EXT_MAP.get(ext, (f"ملف {ext}" if ext else "ملف بدون امتداد", "other"))
+        desc, cat = extMap.get(ext, (f"ملف {ext}" if ext else "ملف بدون امتداد", "other"))
         info["type_desc"] = desc
         info["category"] = cat
-        info["category_label"] = _category_label(cat)
+        info["category_label"] = categoryLabel(cat)
 
         if ext in ("exe", "dll", "sys", "msi", "ocx", "scr"):
-            pub = get_publisher_info(path)
+            pub = getPublisherInfo(path)
             info["publisher"] = pub.get("CompanyName", "")
             info["product"] = pub.get("ProductName", "")
             info["description"] = pub.get("FileDescription", "")
             info["version"] = pub.get("FileVersion", "")
 
-    owner, note = _owner_from_path(path)
+    owner, note = ownerFromPath(path)
     if owner:
         info["owner"] = owner
         info["owner_note"] = note
@@ -212,7 +212,7 @@ def analyze(path):
 
     win = os.environ.get("SystemRoot", r"C:\Windows").lower()
     low = os.path.normpath(path).lower()
-    if _is_junk_location(path) or info["category"] == "junk":
+    if isJunkLocation(path) or info["category"] == "junk":
         info["safe"] = "safe"
         info["safe_text"] = "امن للحذف، ملف مؤقت او كاش يعاد انشاؤه"
     elif low.startswith(win) or "program files" in low:

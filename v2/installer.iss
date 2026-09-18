@@ -2,7 +2,7 @@
 ; Build: ISCC.exe installer.iss
 
 #define AppName "Cleanix"
-#define AppVersion "2.2.0"
+#define AppVersion "2.3.0"
 #define AppPublisher "Mohammed Abd Alrahman"
 #define AppURL "https://mohmadev.com/"
 #define RepoURL "https://github.com/dvlinuxx-max/Cleanix"

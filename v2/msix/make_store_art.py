@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFont
 import make_assets as ma
 
 OUT = os.path.join(ma.HERE, "store", "logos")
-FONT_BOLD = r"C:\Windows\Fonts\segoeuib.ttf"
+fontBold = r"C:\Windows\Fonts\segoeuib.ttf"
 FONT = r"C:\Windows\Fonts\segoeui.ttf"
 ACCENTS = [(52, 199, 89), (255, 176, 32), (47, 155, 255)]
 
@@ -19,7 +19,7 @@ def canvas(w, h):
     return img, d
 
 
-def accent_bars(d, cx, y, width):
+def accentBars(d, cx, y, width):
     seg = width / 3
     for i, c in enumerate(ACCENTS):
         x0 = cx - width / 2 + i * seg
@@ -40,8 +40,8 @@ def poster(w=720, h=1080):
     a = ma.art(int(w * 0.72))
     img.alpha_composite(a, ((w - a.width) // 2, int(h * 0.18)))
     d = ImageDraw.Draw(img)
-    centered(d, "Cleanix", ImageFont.truetype(FONT_BOLD, int(w * 0.15)), w / 2, int(h * 0.70), (255, 255, 255))
-    accent_bars(d, w / 2, int(h * 0.84), w * 0.5)
+    centered(d, "Cleanix", ImageFont.truetype(fontBold, int(w * 0.15)), w / 2, int(h * 0.70), (255, 255, 255))
+    accentBars(d, w / 2, int(h * 0.84), w * 0.5)
     return img
 
 
@@ -50,8 +50,8 @@ def boxart(size=1080):
     a = ma.art(int(size * 0.58))
     img.alpha_composite(a, ((size - a.width) // 2, int(size * 0.12)))
     d = ImageDraw.Draw(img)
-    centered(d, "Cleanix", ImageFont.truetype(FONT_BOLD, int(size * 0.12)), size / 2, int(size * 0.71), (255, 255, 255))
-    accent_bars(d, size / 2, int(size * 0.88), size * 0.4)
+    centered(d, "Cleanix", ImageFont.truetype(fontBold, int(size * 0.12)), size / 2, int(size * 0.71), (255, 255, 255))
+    accentBars(d, size / 2, int(size * 0.88), size * 0.4)
     return img
 
 
@@ -60,14 +60,14 @@ def hero(w=1920, h=1080):
     a = ma.art(int(h * 0.62))
     img.alpha_composite(a, (int(w * 0.56), (h - a.height) // 2))
     d = ImageDraw.Draw(img)
-    d.text((int(w * 0.10), int(h * 0.34)), "Cleanix", font=ImageFont.truetype(FONT_BOLD, int(h * 0.16)),
+    d.text((int(w * 0.10), int(h * 0.34)), "Cleanix", font=ImageFont.truetype(fontBold, int(h * 0.16)),
            fill=(255, 255, 255))
     d.text((int(w * 0.105), int(h * 0.55)), "Disk space analyzer and cleaner",
            font=ImageFont.truetype(FONT, int(h * 0.045)), fill=(182, 198, 219))
-    seg_w = w * 0.08
+    segW = w * 0.08
     for i, c in enumerate(ACCENTS):
-        x0 = w * 0.105 + i * (seg_w + 14)
-        d.rounded_rectangle((x0, h * 0.64, x0 + seg_w, h * 0.64 + 10), radius=5, fill=c + (255,))
+        x0 = w * 0.105 + i * (segW + 14)
+        d.rounded_rectangle((x0, h * 0.64, x0 + segW, h * 0.64 + 10), radius=5, fill=c + (255,))
     return img
 
 

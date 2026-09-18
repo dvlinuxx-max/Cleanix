@@ -5,10 +5,10 @@ from PIL import Image, ImageDraw, ImageFilter
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 ART = Image.open(os.path.join(ROOT, "assets", "icon.png")).convert("RGBA")
-NAVY_TOP, NAVY_BOTTOM = (32, 86, 150), (10, 32, 62)
+navyTop, navyBottom = (32, 86, 150), (10, 32, 62)
 
 
-def gradient(w, h, top=NAVY_TOP, bottom=NAVY_BOTTOM):
+def gradient(w, h, top=navyTop, bottom=navyBottom):
     img = Image.new("RGBA", (w, h))
     d = ImageDraw.Draw(img)
     for y in range(h):
@@ -68,11 +68,11 @@ def wide(w, h):
     return img
 
 
-def build(out_dir):
-    os.makedirs(out_dir, exist_ok=True)
+def build(outDir):
+    os.makedirs(outDir, exist_ok=True)
 
     def save(img, name):
-        img.save(os.path.join(out_dir, name))
+        img.save(os.path.join(outDir, name))
 
     for scale, px in ((100, 44), (125, 55), (150, 66), (200, 88), (400, 176)):
         save(symbol(px) if px <= 88 else art(px), f"Square44x44Logo.scale-{scale}.png")

@@ -19,16 +19,16 @@ from duplicates import DuplicateEngine
 
 try:
     from send2trash import send2trash
-    HAS_SEND2TRASH = True
+    hasSend2trash = True
 except ImportError:
-    HAS_SEND2TRASH = False
+    hasSend2trash = False
 
 
-APP_VERSION = "2.2.0"
-SITE_URL = "https://mohmadev.com/"
-APP_NAME = "Cleanix"
-REPO_URL = "https://github.com/dvlinuxx-max/Cleanix"
-CONTACT_EMAIL = "dvlinuxx@gmail.com"
+appVersion = "2.3.0"
+siteUrl = "https://mohmadev.com/"
+appName = "Cleanix"
+repoUrl = "https://github.com/dvlinuxx-max/Cleanix"
+contactEmail = "dvlinuxx@gmail.com"
 
 FONT = "Segoe UI"
 C = {
@@ -48,7 +48,7 @@ def resource(name):
     return os.path.join(base, "assets", name)
 
 
-def human_size(num):
+def humanSize(num):
     for unit in ("B", "KB", "MB", "GB", "TB", "PB"):
         if abs(num) < 1024.0:
             return f"{num:,.1f} {unit}"
@@ -56,19 +56,19 @@ def human_size(num):
     return f"{num:,.1f} EB"
 
 
-AR_UNITS = ("بايت", "كيلوبايت", "ميغابايت", "غيغابايت", "تيرابايت")
+arUnits = ("بايت", "كيلوبايت", "ميغابايت", "غيغابايت", "تيرابايت")
 
 
-def ar_size(num):
+def arSize(num):
     """Size with Arabic units; Tk misorders Latin units inside Arabic sentences."""
-    for unit in AR_UNITS:
+    for unit in arUnits:
         if abs(num) < 1024.0:
             return f"{num:,.1f} {unit}"
         num /= 1024.0
-    return f"{num * 1024:,.1f} {AR_UNITS[-1]}"
+    return f"{num * 1024:,.1f} {arUnits[-1]}"
 
 
-def open_in_explorer(path):
+def openInExplorer(path):
     try:
         if os.path.isdir(path):
             os.startfile(path)
@@ -78,11 +78,11 @@ def open_in_explorer(path):
         messagebox.showerror("خطأ", f"تعذر فتح المسار:\n{e}")
 
 
-USER_FOLDERS = ("Desktop", "Documents", "Downloads", "Pictures", "Videos", "Music", "AppData",
+userFolders = ("Desktop", "Documents", "Downloads", "Pictures", "Videos", "Music", "AppData",
                 "OneDrive", "Favorites", "Contacts", "Links", "Saved Games", "Searches", "3D Objects")
 
 
-def _protected_paths():
+def protectedPaths():
     env = os.environ
     items = [r"C:\Windows", r"C:\Program Files", r"C:\Program Files (x86)", r"C:\ProgramData",
              r"C:\Users"]
@@ -91,16 +91,16 @@ def _protected_paths():
                                        "TEMP", "TMP")]
     for base in (env.get("USERPROFILE", ""), env.get("OneDrive", "")):
         if base:
-            items += [os.path.join(base, name) for name in USER_FOLDERS]
+            items += [os.path.join(base, name) for name in userFolders]
     if env.get("USERPROFILE"):
         items += [os.path.join(env["USERPROFILE"], "AppData", n) for n in ("Local", "LocalLow", "Roaming")]
     return {os.path.normcase(os.path.normpath(p)) for p in items if p}
 
 
-PROTECTED = _protected_paths()
+PROTECTED = protectedPaths()
 
 
-def is_protected(path):
+def isProtected(path):
     """System folders, the user's own base folders, drive roots, and anything that contains them."""
     np = os.path.normcase(os.path.normpath(path))
     if np in PROTECTED:
@@ -121,40 +121,40 @@ class Btn(tk.Button):
     }
 
     def __init__(self, master, text, command, kind="neutral", size=10, padx=14, pady=6, state="normal"):
-        self._bg, self._hover, fg = self.KINDS[kind]
-        super().__init__(master, text=text, command=command, bg=self._bg, fg=fg,
-                         activebackground=self._hover, activeforeground=fg,
+        self.baseBg, self.hover, fg = self.KINDS[kind]
+        super().__init__(master, text=text, command=command, bg=self.baseBg, fg=fg,
+                         activebackground=self.hover, activeforeground=fg,
                          disabledforeground=C["disabled"], relief="flat", bd=0,
                          highlightthickness=0, cursor="hand2", padx=padx, pady=pady,
                          font=(FONT, size, "bold"))
-        self.bind("<Enter>", self._enter)
-        self.bind("<Leave>", self._leave)
+        self.bind("<Enter>", self.enter)
+        self.bind("<Leave>", self.leave)
         self.configure(state=state)
 
     def configure(self, cnf=None, **kw):
         if "state" in kw:
             on = kw["state"] == "normal"
-            kw["bg"] = self._bg if on else C["gray"]
+            kw["bg"] = self.baseBg if on else C["gray"]
             kw["cursor"] = "hand2" if on else "arrow"
         return super().configure(cnf, **kw)
 
     config = configure
 
-    def _enter(self, _):
+    def enter(self, _):
         if str(self["state"]) == "normal":
-            tk.Button.configure(self, bg=self._hover)
+            tk.Button.configure(self, bg=self.hover)
 
-    def _leave(self, _):
+    def leave(self, _):
         if str(self["state"]) == "normal":
-            tk.Button.configure(self, bg=self._bg)
+            tk.Button.configure(self, bg=self.baseBg)
 
 
 class TabView(tk.Frame):
     """Right-aligned tab bar; ttk.Notebook cannot place tabs on the right."""
 
-    def __init__(self, master, on_change=None):
+    def __init__(self, master, onChange=None):
         super().__init__(master, bg=C["bg"])
-        self.on_change = on_change
+        self.onChange = onChange
         self.bar = tk.Frame(self, bg=C["bg"])
         self.bar.pack(fill="x")
         self.body = tk.Frame(self, bg=C["card"], highlightbackground=C["line"], highlightthickness=1)
@@ -168,11 +168,11 @@ class TabView(tk.Frame):
         tab = tk.Label(self.bar, text=title, font=(FONT, 10, "bold"), padx=18, pady=8, cursor="hand2")
         tab.pack(side="right", padx=(0, 3))
         tab.bind("<Button-1>", lambda e, i=idx: self.select(i))
-        tab.bind("<Enter>", lambda e, i=idx: self._hover(i, True))
-        tab.bind("<Leave>", lambda e, i=idx: self._hover(i, False))
+        tab.bind("<Enter>", lambda e, i=idx: self.hover(i, True))
+        tab.bind("<Leave>", lambda e, i=idx: self.hover(i, False))
         self.tabs.append(tab)
         self.frames.append(frame)
-        self._paint(idx)
+        self.paintTab(idx)
 
     def select(self, idx):
         if idx == self.current:
@@ -182,17 +182,17 @@ class TabView(tk.Frame):
         self.current = idx
         self.frames[idx].pack(fill="both", expand=True)
         for i in range(len(self.tabs)):
-            self._paint(i)
-        if self.on_change:
-            self.on_change()
+            self.paintTab(i)
+        if self.onChange:
+            self.onChange()
 
-    def _paint(self, i):
+    def paintTab(self, i):
         if i == self.current:
             self.tabs[i].config(bg=C["card"], fg=C["blue"])
         else:
             self.tabs[i].config(bg=C["gray"], fg=C["muted"])
 
-    def _hover(self, i, inside):
+    def hover(self, i, inside):
         if i != self.current:
             self.tabs[i].config(bg=C["gray_h"] if inside else C["gray"])
 
@@ -202,50 +202,50 @@ def card(parent, **kw):
 
 
 class ScanEngine:
-    def __init__(self, root_path, progress_q, stop_event):
-        self.root_path = root_path
-        self.q = progress_q
-        self.stop = stop_event
-        self.total_bytes = 0
-        self.file_count = 0
-        self.dir_sizes = {}
-        self.big_files = []
-        self.cat_bytes = {}
+    def __init__(self, rootPath, progressQ, stopEvent):
+        self.rootPath = rootPath
+        self.q = progressQ
+        self.stop = stopEvent
+        self.totalBytes = 0
+        self.fileCount = 0
+        self.dirSizes = {}
+        self.bigFiles = []
+        self.catBytes = {}
 
     def run(self):
         try:
-            self._scan(self.root_path)
+            self.scan(self.rootPath)
         except Exception as e:
             self.q.put(("error", str(e)))
             return
         if self.stop.is_set():
             self.q.put(("cancelled", None))
             return
-        self.big_files.sort(key=lambda x: x[1], reverse=True)
+        self.bigFiles.sort(key=lambda x: x[1], reverse=True)
         self.q.put(("done", {
-            "dir_sizes": self.dir_sizes,
-            "big_files": self.big_files[:1000],
-            "total_bytes": self.total_bytes,
-            "file_count": self.file_count,
-            "cat_bytes": self.cat_bytes,
+            "dir_sizes": self.dirSizes,
+            "big_files": self.bigFiles[:1000],
+            "total_bytes": self.totalBytes,
+            "file_count": self.fileCount,
+            "cat_bytes": self.catBytes,
         }))
 
-    def _quick_cat(self, name):
+    def quickCat(self, name):
         ext = os.path.splitext(name)[1].lstrip(".").lower()
-        d = fileinfo._EXT_MAP.get(ext)
+        d = fileinfo.extMap.get(ext)
         return d[1] if d else "other"
 
-    def _scan(self, path):
+    def scan(self, path):
         stack = [path]
         direct = {}
         children = {}
-        last_report = time.time()
-        all_dirs = []
+        lastReport = time.time()
+        allDirs = []
         while stack:
             if self.stop.is_set():
                 return
             cur = stack.pop()
-            all_dirs.append(cur)
+            allDirs.append(cur)
             direct.setdefault(cur, 0)
             children.setdefault(cur, [])
             try:
@@ -254,7 +254,7 @@ class ScanEngine:
                         if self.stop.is_set():
                             return
                         try:
-                            if cleaner.is_link(entry):
+                            if cleaner.isLink(entry):
                                 continue
                             if entry.is_dir(follow_symlinks=False):
                                 children[cur].append(entry.path)
@@ -262,32 +262,32 @@ class ScanEngine:
                             elif entry.is_file(follow_symlinks=False):
                                 sz = entry.stat(follow_symlinks=False).st_size
                                 direct[cur] += sz
-                                self.total_bytes += sz
-                                self.file_count += 1
-                                cat = self._quick_cat(entry.name)
-                                self.cat_bytes[cat] = self.cat_bytes.get(cat, 0) + sz
+                                self.totalBytes += sz
+                                self.fileCount += 1
+                                cat = self.quickCat(entry.name)
+                                self.catBytes[cat] = self.catBytes.get(cat, 0) + sz
                                 if sz >= 5 * 1024 * 1024:
-                                    self.big_files.append((entry.path, sz))
+                                    self.bigFiles.append((entry.path, sz))
                         except (PermissionError, OSError):
                             continue
             except (PermissionError, OSError):
                 continue
             now = time.time()
-            if now - last_report > 0.15:
-                last_report = now
+            if now - lastReport > 0.15:
+                lastReport = now
                 self.q.put(("progress", {
-                    "current": cur, "total_bytes": self.total_bytes,
-                    "file_count": self.file_count,
+                    "current": cur, "total_bytes": self.totalBytes,
+                    "file_count": self.fileCount,
                 }))
         if self.stop.is_set():
             return
         sizes = dict(direct)
-        for d in sorted(all_dirs, key=lambda p: p.count(os.sep), reverse=True):
+        for d in sorted(allDirs, key=lambda p: p.count(os.sep), reverse=True):
             total = direct.get(d, 0)
             for ch in children.get(d, []):
                 total += sizes.get(ch, 0)
             sizes[d] = total
-        self.dir_sizes = sizes
+        self.dirSizes = sizes
 
 
 class App(tk.Tk):
@@ -295,13 +295,13 @@ class App(tk.Tk):
         super().__init__()
         self.scale = max(1.0, self.winfo_fpixels("1i") / 96.0)
         self.tk.call("tk", "scaling", self.scale * 96 / 72)
-        self.title(APP_NAME)
-        want_w, want_h = self.px(1320), self.px(800)
-        w = min(want_w, self.winfo_screenwidth() - 40)
-        h = min(want_h, self.winfo_screenheight() - 80)
+        self.title(appName)
+        wantW, wantH = self.px(1320), self.px(800)
+        w = min(wantW, self.winfo_screenwidth() - 40)
+        h = min(wantH, self.winfo_screenheight() - 80)
         self.geometry(f"{w}x{h}")
         self.minsize(min(self.px(1080), w), min(self.px(660), h))
-        if w < want_w or h < want_h:
+        if w < wantW or h < wantH:
             self.state("zoomed")
         self.configure(bg=C["bg"])
         try:
@@ -310,31 +310,31 @@ class App(tk.Tk):
             pass
         try:
             size = 88 if self.scale >= 1.75 else 66 if self.scale >= 1.25 else 44
-            self._logo = tk.PhotoImage(file=resource(f"logo_{size}.png"))
+            self.logoImage = tk.PhotoImage(file=resource(f"logo_{size}.png"))
         except tk.TclError:
-            self._logo = None
+            self.logoImage = None
 
-        self.stop_event = threading.Event()
-        self.progress_q = queue.Queue()
-        self.dup_stop = threading.Event()
-        self.dup_q = queue.Queue()
-        self.boost_q = queue.Queue()
+        self.stopEvent = threading.Event()
+        self.progressQ = queue.Queue()
+        self.dupStop = threading.Event()
+        self.dupQ = queue.Queue()
+        self.boostQ = queue.Queue()
         self.result = None
-        self.current_root = None
-        self.dup_groups = []
-        self._info_cache = {}
-        self._tree_nodes = {}
-        self._junk_rows = {}
-        self._junk_busy = False
+        self.currentRoot = None
+        self.dupGroups = []
+        self.infoCache = {}
+        self.treeNodes = {}
+        self.junkRows = {}
+        self.junkBusy = False
 
-        self._build_style()
-        self._build_widgets()
-        self._refresh_drives()
+        self.buildStyle()
+        self.buildWidgets()
+        self.refreshDrives()
 
     def px(self, n):
         return int(round(n * self.scale))
 
-    def _build_style(self):
+    def buildStyle(self):
         style = ttk.Style(self)
         try:
             style.theme_use("clam")
@@ -350,43 +350,43 @@ class App(tk.Tk):
         style.map("Treeview.Heading", background=[("active", C["gray_h"])])
         style.configure("TProgressbar", background=C["green"], troughcolor=C["gray"], borderwidth=0)
 
-    def _build_widgets(self):
-        self._build_header()
-        self._build_steps()
+    def buildWidgets(self):
+        self.buildHeader()
+        self.buildSteps()
 
-        self.drives_frame = tk.Frame(self, bg=C["bg"])
-        self.drives_frame.pack(fill="x", padx=14, pady=(10, 4))
+        self.drivesFrame = tk.Frame(self, bg=C["bg"])
+        self.drivesFrame.pack(fill="x", padx=14, pady=(10, 4))
 
-        self._build_credits()
-        self._build_bottom()
+        self.buildCredits()
+        self.buildBottom()
 
         main = tk.Frame(self, bg=C["bg"])
         main.pack(fill="both", expand=True, padx=14, pady=6)
 
-        self._build_details_panel(main)
+        self.buildDetailsPanel(main)
 
-        self.nb = TabView(main, on_change=self._clear_details)
+        self.nb = TabView(main, onChange=self.clearDetails)
         self.nb.pack(side="right", fill="both", expand=True)
-        self._build_tree_tab()
-        self._build_files_tab()
-        self._build_dup_tab()
-        self._build_junk_tab()
+        self.buildTreeTab()
+        self.buildFilesTab()
+        self.buildDupTab()
+        self.buildJunkTab()
         self.nb.select(0)
 
-    def _build_credits(self):
+    def buildCredits(self):
         strip = tk.Frame(self, bg=C["navy"], padx=14, pady=6)
         strip.pack(fill="x", side="bottom")
-        tk.Label(strip, text=f"v{APP_VERSION}", bg=C["navy"], fg=C["navy_sub"],
+        tk.Label(strip, text=f"v{appVersion}", bg=C["navy"], fg=C["navy_sub"],
                  font=(FONT, 9)).pack(side="right")
-        tk.Label(strip, text=APP_NAME, bg=C["navy"], fg="#FFFFFF",
+        tk.Label(strip, text=appName, bg=C["navy"], fg="#FFFFFF",
                  font=(FONT, 10, "bold")).pack(side="right", padx=(0, 8))
-        Btn(strip, "License", self._show_license, kind="navy", size=9, padx=16, pady=3).pack(side="left")
-        self.update_box = tk.Frame(strip, bg=C["navy"])
-        self.after(2000, self._check_updates)
+        Btn(strip, "License", self.showLicense, kind="navy", size=9, padx=16, pady=3).pack(side="left")
+        self.updateBox = tk.Frame(strip, bg=C["navy"])
+        self.after(2000, self.checkUpdates)
 
-    def _check_updates(self):
+    def checkUpdates(self):
         q = queue.Queue()
-        threading.Thread(target=lambda: q.put(updater.newer_release(APP_VERSION)), daemon=True).start()
+        threading.Thread(target=lambda: q.put(updater.newerRelease(appVersion)), daemon=True).start()
 
         def poll():
             try:
@@ -395,11 +395,11 @@ class App(tk.Tk):
                 self.after(500, poll)
                 return
             if rel:
-                self._show_update(*rel)
+                self.showUpdate(*rel)
 
         self.after(500, poll)
 
-    def _manual_update_check(self, win, btn, result):
+    def manualUpdateCheck(self, win, btn, result):
         def show(text, fg):
             for w in result.winfo_children():
                 w.destroy()
@@ -408,7 +408,7 @@ class App(tk.Tk):
         btn.config(state="disabled")
         show("جاري الفحص", C["blue"])
         q = queue.Queue()
-        threading.Thread(target=lambda: q.put(updater.check(APP_VERSION)), daemon=True).start()
+        threading.Thread(target=lambda: q.put(updater.check(appVersion)), daemon=True).start()
 
         def poll():
             if not win.winfo_exists():
@@ -423,9 +423,9 @@ class App(tk.Tk):
                 show("يتوفر اصدار جديد", C["green"])
                 tk.Label(result, text=tag, bg=C["card"], fg=C["green"],
                          font=(FONT, 10, "bold")).pack(side="right", padx=(0, 6))
-                Btn(result, "تنزيل", lambda: webbrowser.open(url or REPO_URL + "/releases/latest"),
+                Btn(result, "تنزيل", lambda: webbrowser.open(url or repoUrl + "/releases/latest"),
                     kind="success", size=9, padx=12, pady=3).pack(side="right", padx=(0, 10))
-                self._show_update(tag, url)
+                self.showUpdate(tag, url)
             elif state == "latest":
                 show("لديك احدث اصدار", C["green"])
             elif state == "none":
@@ -435,21 +435,21 @@ class App(tk.Tk):
 
         win.after(200, poll)
 
-    def _show_update(self, tag, url):
-        box = self.update_box
+    def showUpdate(self, tag, url):
+        box = self.updateBox
         if box.winfo_children():
             return
-        Btn(box, "يتوفر اصدار جديد", lambda: webbrowser.open(url or REPO_URL + "/releases/latest"),
+        Btn(box, "يتوفر اصدار جديد", lambda: webbrowser.open(url or repoUrl + "/releases/latest"),
             kind="success", size=9, padx=14, pady=3).pack(side="left")
         tk.Label(box, text=tag, bg=C["navy"], fg="#8FE3AE", font=(FONT, 9, "bold")).pack(side="left", padx=8)
         box.pack(side="left", padx=12)
 
-    def _show_license(self):
-        if getattr(self, "_license_win", None) and self._license_win.winfo_exists():
-            self._license_win.lift()
+    def showLicense(self):
+        if getattr(self, "licenseWin", None) and self.licenseWin.winfo_exists():
+            self.licenseWin.lift()
             return
         win = tk.Toplevel(self)
-        self._license_win = win
+        self.licenseWin = win
         win.title("License")
         win.configure(bg=C["card"])
         win.resizable(False, False)
@@ -461,13 +461,13 @@ class App(tk.Tk):
 
         head = tk.Frame(win, bg=C["navy"], padx=20, pady=14)
         head.pack(fill="x")
-        if self._logo:
-            tk.Label(head, image=self._logo, bg=C["navy"]).pack(side="right", padx=(12, 0))
+        if self.logoImage:
+            tk.Label(head, image=self.logoImage, bg=C["navy"]).pack(side="right", padx=(12, 0))
         titles = tk.Frame(head, bg=C["navy"])
         titles.pack(side="right")
-        tk.Label(titles, text=APP_NAME, bg=C["navy"], fg="#FFFFFF",
+        tk.Label(titles, text=appName, bg=C["navy"], fg="#FFFFFF",
                  font=(FONT, 15, "bold")).pack(anchor="e")
-        tk.Label(titles, text=f"v{APP_VERSION}", bg=C["navy"], fg=C["navy_sub"],
+        tk.Label(titles, text=f"v{appVersion}", bg=C["navy"], fg=C["navy_sub"],
                  font=(FONT, 10)).pack(anchor="e")
 
         body = tk.Frame(win, bg=C["card"], padx=24, pady=18)
@@ -490,27 +490,27 @@ class App(tk.Tk):
             if url:
                 val.bind("<Button-1>", lambda e: webbrowser.open(url))
 
-        row("الموقع", SITE_URL.split("//")[1].rstrip("/"), SITE_URL)
-        row("البريد", CONTACT_EMAIL, "mailto:" + CONTACT_EMAIL)
-        row("المصدر", REPO_URL.split("//")[1], REPO_URL)
-        row("الاصدار", APP_VERSION)
+        row("الموقع", siteUrl.split("//")[1].rstrip("/"), siteUrl)
+        row("البريد", contactEmail, "mailto:" + contactEmail)
+        row("المصدر", repoUrl.split("//")[1], repoUrl)
+        row("الاصدار", appVersion)
 
         upd = tk.Frame(body, bg=C["card"])
         upd.pack(fill="x", pady=(10, 0))
-        upd_btn = Btn(upd, "فحص التحديثات", None, kind="primary", size=9, padx=14, pady=4)
-        upd_btn.pack(side="right")
-        upd_result = tk.Frame(upd, bg=C["card"])
-        upd_result.pack(side="right", padx=(0, 12))
-        upd_btn.config(command=lambda: self._manual_update_check(win, upd_btn, upd_result))
+        updBtn = Btn(upd, "فحص التحديثات", None, kind="primary", size=9, padx=14, pady=4)
+        updBtn.pack(side="right")
+        updResult = tk.Frame(upd, bg=C["card"])
+        updResult.pack(side="right", padx=(0, 12))
+        updBtn.config(command=lambda: self.manualUpdateCheck(win, updBtn, updResult))
 
         lic = tk.Frame(body, bg=C["green_t"], padx=12, pady=8)
         lic.pack(fill="x", pady=(16, 0))
         tk.Label(lic, text="يعمل البرنامج تحت رخصة", bg=C["green_t"], fg=C["green"],
                  font=(FONT, 10, "bold")).pack(side="right")
-        lic_link = tk.Label(lic, text="MIT License", bg=C["green_t"], fg=C["green"], cursor="hand2",
+        licLink = tk.Label(lic, text="MIT License", bg=C["green_t"], fg=C["green"], cursor="hand2",
                             font=(FONT, 10, "bold", "underline"))
-        lic_link.pack(side="right", padx=(0, 4))
-        lic_link.bind("<Button-1>", lambda e: webbrowser.open(REPO_URL + "/blob/main/LICENSE"))
+        licLink.pack(side="right", padx=(0, 4))
+        licLink.bind("<Button-1>", lambda e: webbrowser.open(repoUrl + "/blob/main/LICENSE"))
 
         note = tk.Frame(body, bg=C["blue_t"], padx=12, pady=8)
         note.pack(fill="x", pady=(8, 0))
@@ -533,22 +533,22 @@ class App(tk.Tk):
         win.grab_set()
         win.focus_set()
 
-    def _build_bottom(self):
+    def buildBottom(self):
         bottom = tk.Frame(self, bg=C["card"], highlightbackground=C["line"], highlightthickness=1)
         bottom.pack(fill="x", side="bottom")
         inner = tk.Frame(bottom, bg=C["card"], padx=14, pady=8)
         inner.pack(fill="x")
-        mode = "سلة المهملات" if HAS_SEND2TRASH else "حذف نهائي"
-        self.del_btn = Btn(inner, f"حذف المحدد ({mode})", self._delete_selected, kind="danger")
-        self.del_btn.pack(side="left")
-        self.open_btn = Btn(inner, "فتح الموقع", self._open_selected)
-        self.open_btn.pack(side="left", padx=8)
+        mode = "سلة المهملات" if hasSend2trash else "حذف نهائي"
+        self.delBtn = Btn(inner, f"حذف المحدد ({mode})", self.deleteSelected, kind="danger")
+        self.delBtn.pack(side="left")
+        self.openBtn = Btn(inner, "فتح الموقع", self.openSelected)
+        self.openBtn.pack(side="left", padx=8)
         self.status = tk.Label(inner, text="جاهز، اختر القرص واضغط ابدأ الفحص", bg=C["card"],
                                fg=C["muted"], font=(FONT, 10), anchor="e")
         self.progress = ttk.Progressbar(inner, mode="indeterminate", length=180)
         self.status.pack(side="right", fill="x", expand=True, padx=(12, 0))
 
-    def _busy(self, on):
+    def busy(self, on):
         if on:
             if not self.progress.winfo_ismapped():
                 self.progress.pack(side="right", after=self.status)
@@ -557,28 +557,28 @@ class App(tk.Tk):
             self.progress.stop()
             self.progress.pack_forget()
 
-    def _build_header(self):
+    def buildHeader(self):
         header = tk.Frame(self, bg=C["navy"], padx=18, pady=12)
         header.pack(fill="x")
         brand = tk.Frame(header, bg=C["navy"])
         brand.pack(side="right")
-        if self._logo:
-            tk.Label(brand, image=self._logo, bg=C["navy"]).pack(side="right", padx=(12, 0))
+        if self.logoImage:
+            tk.Label(brand, image=self.logoImage, bg=C["navy"]).pack(side="right", padx=(12, 0))
         titles = tk.Frame(brand, bg=C["navy"])
         titles.pack(side="right")
-        tk.Label(titles, text=APP_NAME, font=(FONT, 16, "bold"),
+        tk.Label(titles, text=appName, font=(FONT, 16, "bold"),
                  fg="#FFFFFF", bg=C["navy"]).pack(anchor="e")
         tk.Label(titles, text="اعرف ما الذي يستهلك مساحة جهازك ونظفه بامان",
                  font=(FONT, 10), fg=C["navy_sub"], bg=C["navy"]).pack(anchor="e")
 
         actions = tk.Frame(header, bg=C["navy"])
         actions.pack(side="left")
-        self.boost_btn = self._header_action(actions, "تسريع الحاسوب", "يمسح الملفات المؤقتة",
-                                             self._speed_up, "success")
-        self.bin_btn = self._header_action(actions, "تفريغ سلة المهملات", "يحرر مساحة الملفات المحذوفة",
-                                           self._clean_recycle_bin, "navy")
+        self.boostBtn = self.headerAction(actions, "تسريع الحاسوب", "يمسح الملفات المؤقتة",
+                                             self.speedUp, "success")
+        self.binBtn = self.headerAction(actions, "تفريغ سلة المهملات", "يحرر مساحة الملفات المحذوفة",
+                                           self.cleanRecycleBin, "navy")
 
-    def _header_action(self, parent, text, caption, command, kind):
+    def headerAction(self, parent, text, caption, command, kind):
         box = tk.Frame(parent, bg=C["navy"])
         box.pack(side="left", padx=(0, 14))
         btn = Btn(box, text, command, kind=kind, size=12, padx=24, pady=9)
@@ -586,7 +586,7 @@ class App(tk.Tk):
         tk.Label(box, text=caption, font=(FONT, 9), fg=C["navy_sub"], bg=C["navy"]).pack(pady=(4, 0))
         return btn
 
-    def _step_badge(self, parent, number, text):
+    def stepBadge(self, parent, number, text):
         box = tk.Frame(parent, bg=C["card"])
         d = self.px(24)
         cv = tk.Canvas(box, width=d, height=d, bg=C["card"], highlightthickness=0)
@@ -597,61 +597,61 @@ class App(tk.Tk):
                  font=(FONT, 10, "bold")).pack(side="right", padx=(6, 8))
         return box
 
-    def _build_steps(self):
+    def buildSteps(self):
         wrap = card(self)
         wrap.pack(fill="x", padx=14, pady=(12, 0))
         row = tk.Frame(wrap, bg=C["card"], padx=12, pady=10)
         row.pack(fill="x")
 
-        self._step_badge(row, 1, "اختر القرص").pack(side="right")
-        self.drive_var = tk.StringVar()
-        self.drive_combo = ttk.Combobox(row, textvariable=self.drive_var, width=16, state="readonly")
-        self.drive_combo.pack(side="right", padx=(0, 6))
-        Btn(row, "او مجلد محدد", self._pick_folder).pack(side="right", padx=(0, 4))
+        self.stepBadge(row, 1, "اختر القرص").pack(side="right")
+        self.driveVar = tk.StringVar()
+        self.driveCombo = ttk.Combobox(row, textvariable=self.driveVar, width=16, state="readonly")
+        self.driveCombo.pack(side="right", padx=(0, 6))
+        Btn(row, "او مجلد محدد", self.pickFolder).pack(side="right", padx=(0, 4))
 
         tk.Frame(row, bg=C["line"], width=1).pack(side="right", fill="y", padx=16)
 
-        self._step_badge(row, 2, "افحص").pack(side="right")
-        self.scan_btn = Btn(row, "ابدأ الفحص", self._start_scan, kind="primary", padx=20)
-        self.scan_btn.pack(side="right", padx=(0, 6))
-        self.stop_btn = Btn(row, "ايقاف", self._stop_scan, state="disabled")
-        self.stop_btn.pack(side="right")
+        self.stepBadge(row, 2, "افحص").pack(side="right")
+        self.scanBtn = Btn(row, "ابدأ الفحص", self.startScan, kind="primary", padx=20)
+        self.scanBtn.pack(side="right", padx=(0, 6))
+        self.stopBtn = Btn(row, "ايقاف", self.stopScan, state="disabled")
+        self.stopBtn.pack(side="right")
 
         tk.Frame(row, bg=C["line"], width=1).pack(side="right", fill="y", padx=16)
 
-        self._step_badge(row, 3, "راجع النتائج واحذف ما لا تحتاجه").pack(side="right")
+        self.stepBadge(row, 3, "راجع النتائج واحذف ما لا تحتاجه").pack(side="right")
 
-        Btn(row, "تحديث الاقراص", self._refresh_drives).pack(side="left")
+        Btn(row, "تحديث الاقراص", self.refreshDrives).pack(side="left")
 
-    def _tab_frame(self, title):
+    def tabFrame(self, title):
         frame = tk.Frame(self.nb.body, bg=C["card"])
         self.nb.add(frame, title)
         return frame
 
-    def _toolbar(self, parent):
+    def toolbar(self, parent):
         bar = tk.Frame(parent, bg=C["card"], padx=10, pady=8)
         bar.pack(fill="x")
         return bar
 
-    def _hint(self, parent, text, **kw):
+    def hint(self, parent, text, **kw):
         return tk.Label(parent, text=text, bg=C["card"], fg=C["muted"], font=(FONT, 10), **kw)
 
     @staticmethod
-    def _stripe_tags(tree):
+    def stripeTags(tree):
         tree.tag_configure("even", background=C["stripe"])
         tree.tag_configure("group", background=C["blue_t"], font=(FONT, 10, "bold"))
 
-    def _scrolled(self, parent, tree):
+    def scrolled(self, parent, tree):
         vsb = ttk.Scrollbar(parent, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=vsb.set)
         vsb.pack(side="right", fill="y")
         tree.pack(side="left", fill="both", expand=True)
-        self._stripe_tags(tree)
+        self.stripeTags(tree)
 
-    def _build_tree_tab(self):
-        frame = self._tab_frame("شجرة المجلدات")
-        bar = self._toolbar(frame)
-        self._hint(bar, "المجلدات مرتبة من الاكبر للاصغر، افتح اي مجلد لترى ما بداخله").pack(side="right")
+    def buildTreeTab(self):
+        frame = self.tabFrame("شجرة المجلدات")
+        bar = self.toolbar(frame)
+        self.hint(bar, "المجلدات مرتبة من الاكبر للاصغر، افتح اي مجلد لترى ما بداخله").pack(side="right")
         cont = tk.Frame(frame, bg=C["card"])
         cont.pack(fill="both", expand=True)
         self.tree = ttk.Treeview(cont, columns=("size", "pct"), selectmode="extended")
@@ -661,92 +661,94 @@ class App(tk.Tk):
         self.tree.column("#0", width=self.px(460), anchor="w")
         self.tree.column("size", width=self.px(120), anchor="e")
         self.tree.column("pct", width=self.px(170), anchor="w")
-        self._scrolled(cont, self.tree)
+        self.scrolled(cont, self.tree)
         self.tree.tag_configure("big", foreground=C["red"])
         self.tree.tag_configure("mid", foreground=C["amber"])
-        self.tree.bind("<<TreeviewOpen>>", self._on_tree_expand)
-        self.tree.bind("<<TreeviewSelect>>", lambda e: self._show_details_for(self._tree_sel_path()))
-        self.tree.bind("<Double-1>", lambda e: self._open_selected())
+        self.tree.bind("<<TreeviewOpen>>", self.onTreeExpand)
+        self.tree.bind("<<TreeviewSelect>>", lambda e: self.showDetailsFor(self.treeSelPath()))
+        self.tree.bind("<Double-1>", lambda e: self.openSelected())
 
-    def _build_files_tab(self):
-        frame = self._tab_frame("اكبر الملفات")
-        bar = self._toolbar(frame)
+    def buildFilesTab(self):
+        frame = self.tabFrame("اكبر الملفات")
+        bar = self.toolbar(frame)
         tk.Label(bar, text="اعرض:", bg=C["card"], fg=C["text"], font=(FONT, 10, "bold")).pack(side="right")
-        self.filter_var = tk.StringVar(value="الكل")
-        fcombo = ttk.Combobox(bar, textvariable=self.filter_var, width=22, state="readonly",
+        self.filterVar = tk.StringVar(value="الكل")
+        fcombo = ttk.Combobox(bar, textvariable=self.filterVar, width=22, state="readonly",
                               values=["الكل", "وسائط", "مستندات", "مضغوط",
                                       "تنفيذي", "نظام او برنامج", "مخلفات", "غير مصنف"])
         fcombo.pack(side="right", padx=6)
-        fcombo.bind("<<ComboboxSelected>>", lambda e: self._populate_files())
-        self._hint(bar, "الملفات الاكبر من 5 ميكا").pack(side="right", padx=10)
+        fcombo.bind("<<ComboboxSelected>>", lambda e: self.populateFiles())
+        self.hint(bar, "الملفات الاكبر من 5 ميكا").pack(side="right", padx=10)
 
         cont = tk.Frame(frame, bg=C["card"])
         cont.pack(fill="both", expand=True)
-        self.files_tree = ttk.Treeview(cont, columns=("size", "cat", "owner", "path"),
+        self.filesTree = ttk.Treeview(cont, columns=("size", "cat", "owner", "path"),
                                        show="headings", selectmode="extended")
         for col, txt, w, anc in (("size", "الحجم", 100, "e"), ("cat", "النوع", 150, "w"),
                                  ("owner", "تابع لـ", 220, "w"), ("path", "المسار", 480, "w")):
-            self.files_tree.heading(col, text=txt, anchor=anc)
-            self.files_tree.column(col, width=self.px(w), anchor=anc)
-        self._scrolled(cont, self.files_tree)
-        self.files_tree.bind("<<TreeviewSelect>>", lambda e: self._show_details_for(self._files_sel_path()))
-        self.files_tree.bind("<Double-1>", lambda e: self._open_selected())
+            self.filesTree.heading(col, text=txt, anchor=anc)
+            self.filesTree.column(col, width=self.px(w), anchor=anc)
+        self.scrolled(cont, self.filesTree)
+        self.filesTree.bind("<<TreeviewSelect>>", lambda e: self.showDetailsFor(self.filesSelPath()))
+        self.filesTree.bind("<Double-1>", lambda e: self.openSelected())
 
-    def _build_dup_tab(self):
-        frame = self._tab_frame("الملفات المكررة")
-        bar = self._toolbar(frame)
-        Btn(bar, "ابحث عن المكررات", self._start_dup_scan, kind="primary").pack(side="right")
+    def buildDupTab(self):
+        frame = self.tabFrame("الملفات المكررة")
+        bar = self.toolbar(frame)
+        Btn(bar, "ابحث عن المكررات", self.startDupScan, kind="primary").pack(side="right")
         tk.Label(bar, text="الحد الادنى للحجم:", bg=C["card"], fg=C["text"],
                  font=(FONT, 10)).pack(side="right", padx=(12, 4))
-        self.dup_min_var = tk.StringVar(value="1 MB")
-        ttk.Combobox(bar, textvariable=self.dup_min_var, width=10, state="readonly",
+        self.dupMinVar = tk.StringVar(value="1 MB")
+        ttk.Combobox(bar, textvariable=self.dupMinVar, width=10, state="readonly",
                      values=["100 KB", "500 KB", "1 MB", "5 MB", "10 MB", "50 MB"]).pack(side="right")
-        self.dup_stop_btn = Btn(bar, "ايقاف", lambda: self.dup_stop.set(), state="disabled")
-        self.dup_stop_btn.pack(side="right", padx=8)
-        self.dup_summary = tk.Label(bar, text="احتفظ بنسخة واحدة من كل مجموعة واحذف الباقي",
+        self.dupStopBtn = Btn(bar, "ايقاف", lambda: self.dupStop.set(), state="disabled")
+        self.dupStopBtn.pack(side="right", padx=8)
+        self.dupSummary = tk.Label(bar, text="احتفظ بنسخة واحدة من كل مجموعة واحذف الباقي",
                                     bg=C["card"], fg=C["muted"], font=(FONT, 10, "bold"))
-        self.dup_summary.pack(side="right", padx=10)
+        self.dupSummary.pack(side="right", padx=10)
 
         cont = tk.Frame(frame, bg=C["card"])
         cont.pack(fill="both", expand=True)
-        self.dup_tree = ttk.Treeview(cont, columns=("size",), selectmode="extended")
-        self.dup_tree.heading("#0", text="مجموعات الملفات المتطابقة", anchor="w")
-        self.dup_tree.heading("size", text="الحجم", anchor="e")
-        self.dup_tree.column("#0", width=self.px(720), anchor="w")
-        self.dup_tree.column("size", width=self.px(120), anchor="e")
-        self._scrolled(cont, self.dup_tree)
-        self.dup_tree.bind("<<TreeviewSelect>>", lambda e: self._show_details_for(self._dup_sel_path()))
-        self.dup_tree.bind("<Double-1>", lambda e: self._open_selected())
+        self.dupTree = ttk.Treeview(cont, columns=("size",), selectmode="extended")
+        self.dupTree.heading("#0", text="مجموعات الملفات المتطابقة", anchor="w")
+        self.dupTree.heading("size", text="الحجم", anchor="e")
+        self.dupTree.column("#0", width=self.px(720), anchor="w")
+        self.dupTree.column("size", width=self.px(120), anchor="e")
+        self.scrolled(cont, self.dupTree)
+        self.dupTree.bind("<<TreeviewSelect>>", lambda e: self.showDetailsFor(self.dupSelPath()))
+        self.dupTree.bind("<Double-1>", lambda e: self.openSelected())
 
-    def _build_junk_tab(self):
-        frame = self._tab_frame("المخلفات")
-        bar = self._toolbar(frame)
-        self.junk_scan_btn = Btn(bar, "فحص المخلفات", self._scan_junk, kind="primary")
-        self.junk_scan_btn.pack(side="right")
-        self.junk_bin_btn = Btn(bar, "تفريغ سلة المهملات", self._clean_recycle_bin, kind="navy")
-        self.junk_bin_btn.pack(side="left")
-        self.junk_summary = tk.Label(bar, text="ملفات مؤقتة وكاش وسلة المهملات، امنة للحذف عادة",
+    def buildJunkTab(self):
+        frame = self.tabFrame("المخلفات")
+        bar = self.toolbar(frame)
+        self.junkScanBtn = Btn(bar, "فحص المخلفات", self.scanJunk, kind="primary")
+        self.junkScanBtn.pack(side="right")
+        self.junkCleanBtn = Btn(bar, "تنظيف المخلفات", self.cleanAllJunk, kind="success", state="disabled")
+        self.junkCleanBtn.pack(side="right", padx=(8, 0))
+        self.junkBinBtn = Btn(bar, "تفريغ سلة المهملات", self.cleanRecycleBin, kind="navy")
+        self.junkBinBtn.pack(side="left")
+        self.junkSummary = tk.Label(bar, text="ملفات مؤقتة وكاش وسلة المهملات، امنة للحذف عادة",
                                      bg=C["card"], fg=C["muted"], font=(FONT, 10, "bold"))
-        self.junk_summary.pack(side="right", padx=12)
+        self.junkSummary.pack(side="right", padx=12)
 
         cont = tk.Frame(frame, bg=C["card"])
         cont.pack(fill="both", expand=True)
-        self.junk_tree = ttk.Treeview(cont, columns=("size", "type", "path"),
+        self.junkTree = ttk.Treeview(cont, columns=("size", "type", "path"),
                                       show="headings", selectmode="extended")
         for col, txt, w, anc in (("size", "الحجم", 100, "e"), ("type", "النوع", 200, "w"),
                                  ("path", "الموقع", 640, "w")):
-            self.junk_tree.heading(col, text=txt, anchor=anc)
-            self.junk_tree.column(col, width=self.px(w), anchor=anc)
-        self._scrolled(cont, self.junk_tree)
-        self.junk_tree.bind("<<TreeviewSelect>>", lambda e: self._show_details_for(self._junk_sel_path()))
+            self.junkTree.heading(col, text=txt, anchor=anc)
+            self.junkTree.column(col, width=self.px(w), anchor=anc)
+        self.scrolled(cont, self.junkTree)
+        self.junkTree.bind("<<TreeviewSelect>>", lambda e: self.showDetailsFor(self.junkSelPath()))
 
-    def _build_details_panel(self, parent):
+    def buildDetailsPanel(self, parent):
         panel = card(parent, width=self.px(330))
         panel.pack(side="left", fill="y", padx=(0, 10))
         panel.pack_propagate(False)
         tk.Label(panel, text="تفاصيل العنصر", bg=C["head"], fg=C["text"], font=(FONT, 11, "bold"),
                  anchor="e", padx=12, pady=8).pack(fill="x")
-        self.guide = self._build_guide(panel)
+        self.guide = self.buildGuide(panel)
         self.details = tk.Text(panel, width=38, height=30, wrap="word", font=(FONT, 10),
                                relief="flat", state="disabled", bg=C["card"], fg=C["text"],
                                padx=12, pady=10, cursor="arrow", highlightthickness=0)
@@ -761,9 +763,9 @@ class App(tk.Tk):
                             ("unsafe", C["red"], C["red_t"])):
             d.tag_configure(tag, foreground=fg, background=bg, font=(FONT, 11, "bold"),
                             spacing1=8, spacing3=8)
-        self._clear_details()
+        self.clearDetails()
 
-    def _build_guide(self, panel):
+    def buildGuide(self, panel):
         # widgets, not Text runs: Tk puts a number tagged apart from Arabic text on the wrong side
         guide = tk.Frame(panel, bg=C["card"], padx=12, pady=12)
         tk.Label(guide, text="كيف تستخدم البرنامج", bg=C["card"], fg=C["navy"],
@@ -789,17 +791,17 @@ class App(tk.Tk):
                  justify="right", padx=10, pady=8).pack(fill="x", pady=(16, 0))
         return guide
 
-    def _clear_details(self):
+    def clearDetails(self):
         self.details.pack_forget()
         self.guide.pack(fill="both", expand=True)
 
-    def _show_details_for(self, path):
+    def showDetailsFor(self, path):
         if not path or path == "__RECYCLE__":
             return
-        info = self._info_cache.get(path)
+        info = self.infoCache.get(path)
         if info is None:
             info = fileinfo.analyze(path)
-            self._info_cache[path] = info
+            self.infoCache[path] = info
         self.guide.pack_forget()
         self.details.pack(fill="both", expand=True)
         d = self.details
@@ -814,9 +816,9 @@ class App(tk.Tk):
                 d.insert("end", str(value) + "\n", "value")
 
         if info["is_dir"] and self.result and path in self.result["dir_sizes"]:
-            row("حجم المجلد", ar_size(self.result["dir_sizes"][path]))
+            row("حجم المجلد", arSize(self.result["dir_sizes"][path]))
         elif not info["is_dir"]:
-            row("الحجم", ar_size(info["size"]))
+            row("الحجم", arSize(info["size"]))
         row("النوع", info["type_desc"])
         row("تابع لـ", info["owner"])
         row("الناشر", info["publisher"])
@@ -836,13 +838,13 @@ class App(tk.Tk):
         d.tag_add("rtl", "1.0", "end")
         d.config(state="disabled")
 
-    def _set_status(self, text, tone="muted"):
+    def setStatus(self, text, tone="muted"):
         colors = {"muted": C["muted"], "ok": C["green"], "warn": C["amber"],
                   "error": C["red"], "busy": C["blue"]}
         self.status.config(text=text, fg=colors.get(tone, C["muted"]))
 
-    def _refresh_drives(self):
-        for w in self.drives_frame.winfo_children():
+    def refreshDrives(self):
+        for w in self.drivesFrame.winfo_children():
             w.destroy()
         drives = []
         for letter in string.ascii_uppercase:
@@ -853,19 +855,19 @@ class App(tk.Tk):
                     drives.append((root, u.total, u.used, u.free))
                 except Exception:
                     continue
-        self.drive_combo["values"] = [d[0] for d in drives]
-        if drives and not self.drive_var.get():
-            self.drive_var.set(drives[0][0])
-        per_row = max(1, min(4, len(drives)))
+        self.driveCombo["values"] = [d[0] for d in drives]
+        if drives and not self.driveVar.get():
+            self.driveVar.set(drives[0][0])
+        perRow = max(1, min(4, len(drives)))
         for c in range(4):
-            self.drives_frame.columnconfigure(c, weight=1 if c < per_row else 0,
-                                              uniform="drive" if c < per_row else "")
+            self.drivesFrame.columnconfigure(c, weight=1 if c < perRow else 0,
+                                              uniform="drive" if c < perRow else "")
         for i, (root, total, used, free) in enumerate(drives):
-            r, c = divmod(i, per_row)
-            self._drive_card(root, total, used, free).grid(
-                row=r, column=per_row - 1 - c, sticky="ew", padx=4, pady=4)
+            r, c = divmod(i, perRow)
+            self.driveCard(root, total, used, free).grid(
+                row=r, column=perRow - 1 - c, sticky="ew", padx=4, pady=4)
 
-    def _drive_card(self, root, total, used, free):
+    def driveCard(self, root, total, used, free):
         pct = (used / total * 100) if total else 0
         if pct > 90:
             state, fg, tint = "ممتلئ", C["red"], C["red_t"]
@@ -873,7 +875,7 @@ class App(tk.Tk):
             state, fg, tint = "شبه ممتلئ", C["amber"], C["amber_t"]
         else:
             state, fg, tint = "جيد", C["green"], C["green_t"]
-        box = card(self.drives_frame, padx=12, pady=8)
+        box = card(self.drivesFrame, padx=12, pady=8)
         top = tk.Frame(box, bg=C["card"])
         top.pack(fill="x")
         tk.Label(top, text="القرص", bg=C["card"], fg=C["text"],
@@ -893,121 +895,121 @@ class App(tk.Tk):
         bar.bind("<Configure>", paint)
         foot = tk.Frame(box, bg=C["card"])
         foot.pack(fill="x")
-        tk.Label(foot, text=f"متبقي {ar_size(free)} من {ar_size(total)}",
+        tk.Label(foot, text=f"متبقي {arSize(free)} من {arSize(total)}",
                  bg=C["card"], fg=C["muted"], font=(FONT, 9)).pack(side="right")
         tk.Label(foot, text=f"{pct:.0f}%", bg=C["card"], fg=fg,
                  font=(FONT, 10, "bold")).pack(side="left")
         return box
 
-    def _speed_up(self):
-        root = cleaner.temp_dir()
+    def speedUp(self):
+        root = cleaner.tempDir()
         if not root:
             messagebox.showerror("تسريع الحاسوب", "تعذر تحديد مجلد الملفات المؤقتة بشكل امن.")
             return
-        self.boost_btn.config(state="disabled")
-        self.bin_btn.config(state="disabled")
-        self.boost_q = queue.Queue()
-        self._busy(True)
-        self._set_status("جاري حساب حجم الملفات المؤقتة وسلة المهملات", "busy")
+        self.boostBtn.config(state="disabled")
+        self.binBtn.config(state="disabled")
+        self.boostQ = queue.Queue()
+        self.busy(True)
+        self.setStatus("جاري حساب حجم الملفات المؤقتة وسلة المهملات", "busy")
 
         def work():
-            size, count = cleaner.measure(root, cleaner.default_skip())
-            rb_size, rb_items = cleaner.recycle_bin_info()
-            self.boost_q.put(("measured", (root, size, count, rb_size, rb_items)))
+            size, count = cleaner.measure(root, cleaner.defaultSkip())
+            rbSize, rbItems = cleaner.recycleBinInfo()
+            self.boostQ.put(("measured", (root, size, count, rbSize, rbItems)))
 
         threading.Thread(target=work, daemon=True).start()
-        self.after(100, self._poll_boost)
+        self.after(100, self.pollBoost)
 
-    def _run_clear(self, root, count, rb_size, rb_items):
-        self._busy(True)
-        self._set_status("جاري التنظيف", "busy")
+    def runClear(self, root, count, rbSize, rbItems):
+        self.busy(True)
+        self.setStatus("جاري التنظيف", "busy")
 
         def report(deleted, freed):
-            self.boost_q.put(("progress", (deleted, freed)))
+            self.boostQ.put(("progress", (deleted, freed)))
 
         def work():
-            freed, deleted, skipped = cleaner.clear(root, cleaner.default_skip(), report) if count else (0, 0, 0)
-            bin_ok, bin_freed = True, 0
-            if rb_items:
-                bin_ok = cleaner.empty_recycle_bin()
-                bin_freed = max(0, rb_size - cleaner.recycle_bin_info()[0])
-            self.boost_q.put(("cleared", (freed, deleted, skipped, bin_freed, bin_ok)))
+            freed, deleted, skipped = cleaner.clear(root, cleaner.defaultSkip(), report) if count else (0, 0, 0)
+            binOk, binFreed = True, 0
+            if rbItems:
+                binOk = cleaner.emptyRecycleBin()
+                binFreed = max(0, rbSize - cleaner.recycleBinInfo()[0])
+            self.boostQ.put(("cleared", (freed, deleted, skipped, binFreed, binOk)))
 
         threading.Thread(target=work, daemon=True).start()
-        self.after(100, self._poll_boost)
+        self.after(100, self.pollBoost)
 
-    def _end_boost(self):
-        self._busy(False)
-        self.boost_btn.config(state="normal")
-        self.bin_btn.config(state="normal")
+    def endBoost(self):
+        self.busy(False)
+        self.boostBtn.config(state="normal")
+        self.binBtn.config(state="normal")
 
-    def _poll_boost(self):
+    def pollBoost(self):
         try:
             while True:
-                kind, payload = self.boost_q.get_nowait()
+                kind, payload = self.boostQ.get_nowait()
                 if kind == "measured":
-                    self._busy(False)
-                    root, size, count, rb_size, rb_items = payload
-                    if count == 0 and rb_items == 0:
-                        self._end_boost()
-                        self._set_status("الملفات المؤقتة وسلة المهملات نظيفة اصلا", "ok")
+                    self.busy(False)
+                    root, size, count, rbSize, rbItems = payload
+                    if count == 0 and rbItems == 0:
+                        self.endBoost()
+                        self.setStatus("الملفات المؤقتة وسلة المهملات نظيفة اصلا", "ok")
                         messagebox.showinfo("تسريع الحاسوب", "لا توجد ملفات مؤقتة ولا عناصر بالسلة، جهازك نظيف.")
                         return
                     if not messagebox.askyesno(
                             "تسريع الحاسوب",
                             "سيتم التنظيف نهائيا:\n\n"
-                            f"الملفات المؤقتة: {count:,} ملف بحجم {ar_size(size)}\n"
-                            f"سلة المهملات: {rb_items:,} عنصر بحجم {ar_size(rb_size)}\n\n"
+                            f"الملفات المؤقتة: {count:,} ملف بحجم {arSize(size)}\n"
+                            f"سلة المهملات: {rbItems:,} عنصر بحجم {arSize(rbSize)}\n\n"
                             "ما في السلة لا يمكن استرجاعه بعد التفريغ.\n"
                             "الملفات التي تستخدمها برامج مفتوحة الان ستبقى ولن تتاثر.\n\n"
                             "متابعة؟", icon="warning"):
-                        self._end_boost()
-                        self._set_status("تم الغاء التسريع")
+                        self.endBoost()
+                        self.setStatus("تم الغاء التسريع")
                         return
-                    self._run_clear(root, count, rb_size, rb_items)
+                    self.runClear(root, count, rbSize, rbItems)
                     return
                 if kind == "progress":
                     deleted, freed = payload
-                    self._set_status(f"تم حذف {deleted:,} ملف، حرر {ar_size(freed)}", "busy")
+                    self.setStatus(f"تم حذف {deleted:,} ملف، حرر {arSize(freed)}", "busy")
                 elif kind == "cleared":
-                    self._on_boost_done(*payload)
+                    self.onBoostDone(*payload)
                     return
         except queue.Empty:
             pass
-        self.after(100, self._poll_boost)
+        self.after(100, self.pollBoost)
 
-    def _on_boost_done(self, freed, deleted, skipped, bin_freed, bin_ok):
-        self._end_boost()
-        self._refresh_drives()
-        self._update_bin_row()
-        total = freed + bin_freed
-        self._set_status(f"تم التسريع، حرر {ar_size(total)}", "ok" if bin_ok else "warn")
-        lines = [f"تم التسريع، حرر {ar_size(total)} بالمجموع.", "",
-                 f"الملفات المؤقتة: حذف {deleted:,} ملف، {ar_size(freed)}",
-                 f"سلة المهملات: {ar_size(bin_freed)}"]
+    def onBoostDone(self, freed, deleted, skipped, binFreed, binOk):
+        self.endBoost()
+        self.refreshDrives()
+        self.updateBinRow()
+        total = freed + binFreed
+        self.setStatus(f"تم التسريع، حرر {arSize(total)}", "ok" if binOk else "warn")
+        lines = [f"تم التسريع، حرر {arSize(total)} بالمجموع.", "",
+                 f"الملفات المؤقتة: حذف {deleted:,} ملف، {arSize(freed)}",
+                 f"سلة المهملات: {arSize(binFreed)}"]
         if skipped:
             lines += ["", f"بقي {skipped:,} ملف مؤقت لان برامج مفتوحة تستخدمه حاليا، وهذا طبيعي."]
-        if not bin_ok:
+        if not binOk:
             lines += ["", "تعذر تفريغ السلة بالكامل، قد تكون بعض الملفات مستخدمة حاليا."]
         messagebox.showinfo("تسريع الحاسوب", "\n".join(lines))
 
-    def _clean_recycle_bin(self):
-        size, items = cleaner.recycle_bin_info()
+    def cleanRecycleBin(self):
+        size, items = cleaner.recycleBinInfo()
         if items == 0:
-            self._set_status("سلة المهملات فارغة اصلا", "ok")
+            self.setStatus("سلة المهملات فارغة اصلا", "ok")
             messagebox.showinfo("سلة المهملات", "سلة المهملات فارغة، لا يوجد شيء لحذفه.")
             return
         if not messagebox.askyesno(
                 "تفريغ سلة المهملات",
-                f"في السلة {items:,} عنصر بحجم {ar_size(size)}.\n\n"
+                f"في السلة {items:,} عنصر بحجم {arSize(size)}.\n\n"
                 "سيتم حذفها نهائيا ولا يمكن استرجاعها بعد التفريغ.\n\nمتابعة؟", icon="warning"):
             return
-        self.bin_btn.config(state="disabled")
-        self.junk_bin_btn.config(state="disabled")
-        self._busy(True)
-        self._set_status("جاري تفريغ سلة المهملات", "busy")
+        self.binBtn.config(state="disabled")
+        self.junkBinBtn.config(state="disabled")
+        self.busy(True)
+        self.setStatus("جاري تفريغ سلة المهملات", "busy")
         done = queue.Queue()
-        threading.Thread(target=lambda: done.put(cleaner.empty_recycle_bin()), daemon=True).start()
+        threading.Thread(target=lambda: done.put(cleaner.emptyRecycleBin()), daemon=True).start()
 
         def poll():
             try:
@@ -1015,123 +1017,123 @@ class App(tk.Tk):
             except queue.Empty:
                 self.after(150, poll)
                 return
-            self._busy(False)
-            self.bin_btn.config(state="normal")
-            self.junk_bin_btn.config(state="normal")
-            self._refresh_drives()
-            left, _ = cleaner.recycle_bin_info()
-            self._update_bin_row()
+            self.busy(False)
+            self.binBtn.config(state="normal")
+            self.junkBinBtn.config(state="normal")
+            self.refreshDrives()
+            left, _ = cleaner.recycleBinInfo()
+            self.updateBinRow()
             freed = max(0, size - left)
             if ok:
-                msg = f"تم تفريغ سلة المهملات وتحرير {ar_size(freed)}."
-                self._set_status(msg, "ok")
+                msg = f"تم تفريغ سلة المهملات وتحرير {arSize(freed)}."
+                self.setStatus(msg, "ok")
                 messagebox.showinfo("سلة المهملات", msg)
             else:
-                self._set_status("تعذر تفريغ سلة المهملات بالكامل", "error")
+                self.setStatus("تعذر تفريغ سلة المهملات بالكامل", "error")
                 messagebox.showwarning("سلة المهملات",
                                        "تعذر تفريغ السلة بالكامل، قد تكون بعض الملفات مستخدمة حاليا.")
 
         self.after(150, poll)
 
     @staticmethod
-    def _bin_row_values(size):
+    def binRowValues(size):
         label = "سلة المهملات" if size else "سلة المهملات فارغة"
-        return human_size(size), label, "Recycle Bin"
+        return humanSize(size), label, "Recycle Bin"
 
-    def _update_bin_row(self):
-        size, _ = cleaner.recycle_bin_info()
-        for item, row in self._junk_rows.items():
-            if row["kind"] == "bin" and self.junk_tree.exists(item):
+    def updateBinRow(self):
+        size, _ = cleaner.recycleBinInfo()
+        for item, row in self.junkRows.items():
+            if row["kind"] == "bin" and self.junkTree.exists(item):
                 row["size"] = size
-                self.junk_tree.item(item, values=self._bin_row_values(size))
+                self.junkTree.item(item, values=self.binRowValues(size))
 
-    def _pick_folder(self):
+    def pickFolder(self):
         folder = filedialog.askdirectory(title="اختر مجلدا للفحص")
         if folder:
-            self.drive_var.set(os.path.normpath(folder))
+            self.driveVar.set(os.path.normpath(folder))
 
-    def _start_scan(self):
-        target = self.drive_var.get().strip()
+    def startScan(self):
+        target = self.driveVar.get().strip()
         if not target or not os.path.exists(target):
             messagebox.showwarning("تنبيه", "اختر قرصا او مجلدا صحيحا اولا.")
             return
-        self.current_root = target
-        self.stop_event.clear()
-        self.progress_q = queue.Queue()
+        self.currentRoot = target
+        self.stopEvent.clear()
+        self.progressQ = queue.Queue()
         self.result = None
-        self._info_cache.clear()
+        self.infoCache.clear()
         self.tree.delete(*self.tree.get_children())
-        self.files_tree.delete(*self.files_tree.get_children())
-        self.scan_btn.config(state="disabled")
-        self.stop_btn.config(state="normal")
-        self.del_btn.config(state="disabled")
-        self._busy(True)
-        self._set_status("جاري الفحص، انتظر قليلا", "busy")
-        engine = ScanEngine(target, self.progress_q, self.stop_event)
+        self.filesTree.delete(*self.filesTree.get_children())
+        self.scanBtn.config(state="disabled")
+        self.stopBtn.config(state="normal")
+        self.delBtn.config(state="disabled")
+        self.busy(True)
+        self.setStatus("جاري الفحص، انتظر قليلا", "busy")
+        engine = ScanEngine(target, self.progressQ, self.stopEvent)
         threading.Thread(target=engine.run, daemon=True).start()
-        self.after(100, self._poll_queue)
+        self.after(100, self.pollQueue)
 
-    def _stop_scan(self):
-        self.stop_event.set()
-        self._set_status("جاري الايقاف", "warn")
+    def stopScan(self):
+        self.stopEvent.set()
+        self.setStatus("جاري الايقاف", "warn")
 
-    def _poll_queue(self):
+    def pollQueue(self):
         try:
             while True:
-                kind, payload = self.progress_q.get_nowait()
+                kind, payload = self.progressQ.get_nowait()
                 if kind == "progress":
-                    self._set_status(
-                        f"جاري الفحص: {payload['file_count']:,} ملف، {ar_size(payload['total_bytes'])}",
+                    self.setStatus(
+                        f"جاري الفحص: {payload['file_count']:,} ملف، {arSize(payload['total_bytes'])}",
                         "busy")
                 elif kind == "done":
-                    self._on_scan_done(payload); return
+                    self.onScanDone(payload); return
                 elif kind == "cancelled":
-                    self._finish_scan("تم الايقاف", "warn"); return
+                    self.finishScan("تم الايقاف", "warn"); return
                 elif kind == "error":
-                    self._finish_scan("خطأ اثناء الفحص", "error")
+                    self.finishScan("خطأ اثناء الفحص", "error")
                     messagebox.showerror("خطأ", payload); return
         except queue.Empty:
             pass
-        self.after(100, self._poll_queue)
+        self.after(100, self.pollQueue)
 
-    def _finish_scan(self, msg, tone="muted"):
-        self._busy(False)
-        self.scan_btn.config(state="normal")
-        self.stop_btn.config(state="disabled")
-        self.del_btn.config(state="normal")
-        self._set_status(msg, tone)
+    def finishScan(self, msg, tone="muted"):
+        self.busy(False)
+        self.scanBtn.config(state="normal")
+        self.stopBtn.config(state="disabled")
+        self.delBtn.config(state="normal")
+        self.setStatus(msg, tone)
 
-    def _on_scan_done(self, payload):
+    def onScanDone(self, payload):
         self.result = payload
         cat = payload.get("cat_bytes", {})
-        top_cats = sorted(cat.items(), key=lambda x: x[1], reverse=True)[:1]
-        cat_txt = "، ".join(f"{fileinfo._category_label(c)} {ar_size(b)}" for c, b in top_cats)
-        self._finish_scan(
-            f"اكتمل الفحص: {payload['file_count']:,} ملف بحجم {ar_size(payload['total_bytes'])}، "
-            f"اكثرها {cat_txt}", "ok")
-        self._populate_tree()
-        self._populate_files()
+        topCats = sorted(cat.items(), key=lambda x: x[1], reverse=True)[:1]
+        catTxt = "، ".join(f"{fileinfo.categoryLabel(c)} {arSize(b)}" for c, b in topCats)
+        self.finishScan(
+            f"اكتمل الفحص: {payload['file_count']:,} ملف بحجم {arSize(payload['total_bytes'])}، "
+            f"اكثرها {catTxt}", "ok")
+        self.populateTree()
+        self.populateFiles()
 
-    def _populate_tree(self):
+    def populateTree(self):
         self.tree.delete(*self.tree.get_children())
         sizes = self.result["dir_sizes"]
-        root = self.current_root
+        root = self.currentRoot
         total = sizes.get(root, self.result["total_bytes"]) or 1
         node = self.tree.insert("", "end", text=root, tags=("group",),
-                                values=(human_size(sizes.get(root, 0)), self._bar(100)), open=True)
-        self._tree_nodes = {node: root}
-        self._add_children(node, root, total)
+                                values=(humanSize(sizes.get(root, 0)), self.barText(100)), open=True)
+        self.treeNodes = {node: root}
+        self.addChildren(node, root, total)
 
-    def _bar(self, pct):
+    def barText(self, pct):
         filled = int(round(pct / 10))
         return "#" * filled + "-" * (10 - filled) + f" {pct:.0f}%"
 
-    def _add_children(self, parent_node, parent_path, grand_total):
+    def addChildren(self, parentNode, parentPath, grandTotal):
         sizes = self.result["dir_sizes"]
         subdirs = []
         try:
-            for name in os.listdir(parent_path):
-                full = os.path.join(parent_path, name)
+            for name in os.listdir(parentPath):
+                full = os.path.join(parentPath, name)
                 if full in sizes and os.path.isdir(full):
                     subdirs.append((full, sizes[full]))
         except (PermissionError, OSError):
@@ -1140,124 +1142,124 @@ class App(tk.Tk):
         for full, sz in subdirs:
             if sz == 0:
                 continue
-            pct = sz / grand_total * 100 if grand_total else 0
+            pct = sz / grandTotal * 100 if grandTotal else 0
             tags = ("big",) if pct >= 20 else ("mid",) if pct >= 5 else ()
-            node = self.tree.insert(parent_node, "end", text=os.path.basename(full) or full,
-                                    values=(human_size(sz), self._bar(pct)), tags=tags)
-            self._tree_nodes[node] = full
-            has_sub = any(os.path.join(full, n) in sizes and sizes[os.path.join(full, n)] > 0
-                          for n in self._safe_listdir(full))
-            if has_sub:
+            node = self.tree.insert(parentNode, "end", text=os.path.basename(full) or full,
+                                    values=(humanSize(sz), self.barText(pct)), tags=tags)
+            self.treeNodes[node] = full
+            hasSub = any(os.path.join(full, n) in sizes and sizes[os.path.join(full, n)] > 0
+                          for n in self.safeListdir(full))
+            if hasSub:
                 self.tree.insert(node, "end", text="...")
 
     @staticmethod
-    def _safe_listdir(path):
+    def safeListdir(path):
         try:
             return os.listdir(path)
         except (PermissionError, OSError):
             return []
 
-    def _on_tree_expand(self, event):
+    def onTreeExpand(self, event):
         node = self.tree.focus()
-        path = self._tree_nodes.get(node)
+        path = self.treeNodes.get(node)
         if not path:
             return
         children = self.tree.get_children(node)
         if len(children) == 1 and self.tree.item(children[0], "text") == "...":
             self.tree.delete(children[0])
-            total = self.result["dir_sizes"].get(self.current_root, 1) or 1
-            self._add_children(node, path, total)
+            total = self.result["dir_sizes"].get(self.currentRoot, 1) or 1
+            self.addChildren(node, path, total)
 
-    _FILTER_CAT = {
+    filterCat = {
         "وسائط": "media", "مستندات": "doc", "مضغوط": "archive",
         "تنفيذي": "exec", "نظام او برنامج": "system", "مخلفات": "junk",
         "غير مصنف": "other",
     }
 
-    def _populate_files(self):
-        self.files_tree.delete(*self.files_tree.get_children())
+    def populateFiles(self):
+        self.filesTree.delete(*self.filesTree.get_children())
         if not self.result:
             return
-        flt = self.filter_var.get()
-        want_cat = self._FILTER_CAT.get(flt)
+        flt = self.filterVar.get()
+        wantCat = self.filterCat.get(flt)
         shown = 0
         for path, sz in self.result["big_files"]:
             ext = os.path.splitext(path)[1].lstrip(".").lower()
-            d = fileinfo._EXT_MAP.get(ext)
+            d = fileinfo.extMap.get(ext)
             cat = d[1] if d else "other"
-            if want_cat and cat != want_cat:
+            if wantCat and cat != wantCat:
                 continue
-            cat_label = fileinfo._category_label(cat)
-            owner = self._light_owner(path)
-            self.files_tree.insert("", "end", values=(human_size(sz), cat_label, owner, path),
+            catLabel = fileinfo.categoryLabel(cat)
+            owner = self.lightOwner(path)
+            self.filesTree.insert("", "end", values=(humanSize(sz), catLabel, owner, path),
                                    tags=("even",) if shown % 2 else ())
             shown += 1
             if shown >= 800:
                 break
 
     @staticmethod
-    def _light_owner(path):
-        owner, _ = fileinfo._owner_from_path(path)
+    def lightOwner(path):
+        owner, _ = fileinfo.ownerFromPath(path)
         return owner or "-"
 
-    def _start_dup_scan(self):
-        target = self.current_root or self.drive_var.get().strip()
+    def startDupScan(self):
+        target = self.currentRoot or self.driveVar.get().strip()
         if not target or not os.path.exists(target):
             messagebox.showwarning("تنبيه", "اختر قرصا او مجلدا وافحصه اولا.")
             return
         sizes = {"100 KB": 100*1024, "500 KB": 500*1024, "1 MB": 1024*1024,
                  "5 MB": 5*1024*1024, "10 MB": 10*1024*1024, "50 MB": 50*1024*1024}
-        min_size = sizes.get(self.dup_min_var.get(), 1024*1024)
-        self.dup_tree.delete(*self.dup_tree.get_children())
-        self.dup_stop.clear()
-        self.dup_q = queue.Queue()
-        self.dup_stop_btn.config(state="normal")
-        self.dup_summary.config(text="جاري البحث", fg=C["blue"])
-        self._set_status("جاري البحث عن الملفات المكررة", "busy")
-        eng = DuplicateEngine(target, min_size, self.dup_q, self.dup_stop)
+        minSize = sizes.get(self.dupMinVar.get(), 1024*1024)
+        self.dupTree.delete(*self.dupTree.get_children())
+        self.dupStop.clear()
+        self.dupQ = queue.Queue()
+        self.dupStopBtn.config(state="normal")
+        self.dupSummary.config(text="جاري البحث", fg=C["blue"])
+        self.setStatus("جاري البحث عن الملفات المكررة", "busy")
+        eng = DuplicateEngine(target, minSize, self.dupQ, self.dupStop)
         threading.Thread(target=eng.run, daemon=True).start()
-        self.after(120, self._poll_dup)
+        self.after(120, self.pollDup)
 
-    def _poll_dup(self):
+    def pollDup(self):
         try:
             while True:
-                kind, payload = self.dup_q.get_nowait()
+                kind, payload = self.dupQ.get_nowait()
                 if kind == "dup_progress":
-                    self._set_status(payload, "busy")
+                    self.setStatus(payload, "busy")
                 elif kind == "dup_done":
-                    self._on_dup_done(payload); return
+                    self.onDupDone(payload); return
                 elif kind == "dup_cancelled":
-                    self.dup_stop_btn.config(state="disabled")
-                    self.dup_summary.config(text="تم الايقاف", fg=C["amber"])
-                    self._set_status("تم ايقاف بحث المكررات", "warn"); return
+                    self.dupStopBtn.config(state="disabled")
+                    self.dupSummary.config(text="تم الايقاف", fg=C["amber"])
+                    self.setStatus("تم ايقاف بحث المكررات", "warn"); return
                 elif kind == "dup_error":
-                    self.dup_stop_btn.config(state="disabled")
+                    self.dupStopBtn.config(state="disabled")
                     messagebox.showerror("خطأ", payload); return
         except queue.Empty:
             pass
-        self.after(120, self._poll_dup)
+        self.after(120, self.pollDup)
 
-    def _on_dup_done(self, payload):
-        self.dup_stop_btn.config(state="disabled")
-        self.dup_groups = payload["groups"]
+    def onDupDone(self, payload):
+        self.dupStopBtn.config(state="disabled")
+        self.dupGroups = payload["groups"]
         wasted = payload["wasted"]
-        self.dup_tree.delete(*self.dup_tree.get_children())
-        for i, g in enumerate(self.dup_groups, 1):
+        self.dupTree.delete(*self.dupTree.get_children())
+        for i, g in enumerate(self.dupGroups, 1):
             saving = g["size"] * (g["count"] - 1)
-            parent = self.dup_tree.insert(
+            parent = self.dupTree.insert(
                 "", "end", tags=("group",),
-                text=f"مجموعة {i}: {g['count']} نسخ متطابقة، يمكن توفير {ar_size(saving)}",
-                values=(human_size(g["size"]),), open=False)
+                text=f"مجموعة {i}: {g['count']} نسخ متطابقة، يمكن توفير {arSize(saving)}",
+                values=(humanSize(g["size"]),), open=False)
             for p in g["paths"]:
-                self.dup_tree.insert(parent, "end", text="   " + p, values=(human_size(g["size"]),))
-        self.dup_summary.config(
-            text=f"وجد {len(self.dup_groups)} مجموعة مكررة، توفير محتمل {ar_size(wasted)}",
-            fg=C["green"] if self.dup_groups else C["muted"])
-        self._set_status(f"اكتمل بحث المكررات، يمكن توفير {ar_size(wasted)}", "ok")
-        if not self.dup_groups:
+                self.dupTree.insert(parent, "end", text="   " + p, values=(humanSize(g["size"]),))
+        self.dupSummary.config(
+            text=f"وجد {len(self.dupGroups)} مجموعة مكررة، توفير محتمل {arSize(wasted)}",
+            fg=C["green"] if self.dupGroups else C["muted"])
+        self.setStatus(f"اكتمل بحث المكررات، يمكن توفير {arSize(wasted)}", "ok")
+        if not self.dupGroups:
             messagebox.showinfo("نتيجة", "لا توجد ملفات مكررة بهذا الحجم.")
 
-    def _junk_candidates(self):
+    def junkCandidates(self):
         ex = os.path.expandvars
         return [
             (os.environ.get("TEMP", ""), "ملفات مؤقتة للمستخدم", "clean"),
@@ -1265,24 +1267,62 @@ class App(tk.Tk):
             (ex(r"%LOCALAPPDATA%\Temp"), "ملفات مؤقتة", "clean"),
             (ex(r"%LOCALAPPDATA%\Microsoft\Windows\INetCache"), "كاش الانترنت", "clean"),
             (ex(r"%LOCALAPPDATA%\CrashDumps"), "تفريغات الاعطال", "clean"),
-            (ex(r"%LOCALAPPDATA%\Google\Chrome\User Data\Default\Cache"), "كاش كروم", "clean"),
-            (ex(r"%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Cache"), "كاش ايدج", "clean"),
+        ] + self.appCacheCandidates() + [
             (ex(r"%LOCALAPPDATA%\pip\cache"), "كاش بيب", "clean"),
-            (ex(r"%LOCALAPPDATA%\NVIDIA\DXCache"), "كاش انفيديا", "clean"),
+            (ex(r"%LOCALAPPDATA%\NVIDIA\DXCache"), "كاش انفيديا DirectX", "clean"),
+            (ex(r"%LOCALAPPDATA%\NVIDIA\GLCache"), "كاش انفيديا OpenGL", "clean"),
+            (ex(r"%USERPROFILE%\AppData\LocalLow\NVIDIA\PerDriverVersion\DXCache"), "كاش انفيديا DirectX", "clean"),
+            (ex(r"%USERPROFILE%\AppData\LocalLow\NVIDIA\PerDriverVersion\GLCache"), "كاش انفيديا OpenGL", "clean"),
+            (ex(r"%APPDATA%\NVIDIA\ComputeCache"), "كاش انفيديا للحوسبة", "clean"),
+            (ex(r"%LOCALAPPDATA%\AMD\DxCache"), "كاش AMD DirectX 11", "clean"),
+            (ex(r"%LOCALAPPDATA%\AMD\DxcCache"), "كاش AMD DirectX 12", "clean"),
+            (ex(r"%LOCALAPPDATA%\AMD\VkCache"), "كاش AMD Vulkan", "clean"),
+            (ex(r"%LOCALAPPDATA%\AMD\GLCache"), "كاش AMD OpenGL", "clean"),
+            (ex(r"%USERPROFILE%\AppData\LocalLow\Intel\ShaderCache"), "كاش انتل", "clean"),
+            (ex(r"%LOCALAPPDATA%\D3DSCache"), "كاش DirectX", "clean"),
+        ] + [(p, "كاش ستيم للالعاب", "clean") for p in cleaner.steamShaderDirs()] + [
             (ex(r"%USERPROFILE%\Downloads"), "التنزيلات راجعها بنفسك", "review"),
         ]
 
-    def _scan_junk(self):
-        if self._junk_busy:
+    appCaches = (
+        ("كروم", r"%LOCALAPPDATA%\Google\Chrome\User Data"),
+        ("ايدج", r"%LOCALAPPDATA%\Microsoft\Edge\User Data"),
+        ("بريف", r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data"),
+        ("فيفالدي", r"%LOCALAPPDATA%\Vivaldi\User Data"),
+        ("اوبرا", r"%LOCALAPPDATA%\Opera Software\Opera Stable"),
+        ("اوبرا GX", r"%LOCALAPPDATA%\Opera Software\Opera GX Stable"),
+        ("ديسكورد", r"%APPDATA%\discord"),
+        ("تيمز", r"%APPDATA%\Microsoft\Teams"),
+        ("تيمز", r"%LOCALAPPDATA%\Packages\MSTeams_8wekyb3d8bbwe\LocalCache\Microsoft\MSTeams\EBWebView"),
+        ("سلاك", r"%APPDATA%\Slack"),
+        ("سبوتيفاي", r"%LOCALAPPDATA%\Spotify\Browser"),
+        ("VS Code", r"%APPDATA%\Code"),
+    )
+    webCacheLabels = {"Cache": "كاش", "Code Cache": "كاش الكود", "GPUCache": "كاش الرسوميات"}
+
+    def appCacheCandidates(self):
+        rows = []
+        for app, root in self.appCaches:
+            for path, profile, name in cleaner.webCacheDirs(os.path.expandvars(root)):
+                label = f"{app} - {self.webCacheLabels[name]}"
+                if profile and profile != "Default":
+                    label += f" ({profile})"
+                rows.append((path, label, "clean"))
+        for path, profile in cleaner.firefoxCacheDirs():
+            rows.append((path, f"فايرفوكس - كاش ({profile})", "clean"))
+        return rows
+
+    def scanJunk(self):
+        if self.junkBusy:
             return
-        self._junk_busy = True
-        self.junk_tree.delete(*self.junk_tree.get_children())
-        self._junk_rows = {}
-        self.junk_scan_btn.config(state="disabled")
-        self._busy(True)
-        self._set_status("جاري فحص المخلفات", "busy")
+        self.junkBusy = True
+        self.junkTree.delete(*self.junkTree.get_children())
+        self.junkRows = {}
+        self.junkButtons(False)
+        self.busy(True)
+        self.setStatus("جاري فحص المخلفات", "busy")
         q = queue.Queue()
-        candidates = self._junk_candidates()
+        candidates = self.junkCandidates()
 
         def work():
             seen = set()
@@ -1297,7 +1337,7 @@ class App(tk.Tk):
                 size, _ = cleaner.measure(path)
                 if size > 0:
                     q.put(("row", (path, label, kind, size)))
-            q.put(("row", ("Recycle Bin", "", "bin", cleaner.recycle_bin_info()[0])))
+            q.put(("row", ("Recycle Bin", "", "bin", cleaner.recycleBinInfo()[0])))
             q.put(("done", None))
 
         threading.Thread(target=work, daemon=True).start()
@@ -1307,15 +1347,15 @@ class App(tk.Tk):
                 while True:
                     kind, payload = q.get_nowait()
                     if kind == "row":
-                        self._add_junk_row(*payload)
+                        self.addJunkRow(*payload)
                     else:
-                        self._junk_busy = False
-                        self._busy(False)
-                        self.junk_scan_btn.config(state="normal")
-                        total = sum(r["size"] for r in self._junk_rows.values() if r["kind"] != "review")
-                        self.junk_summary.config(
-                            text=f"اجمالي المخلفات القابلة للتنظيف نحو {ar_size(total)}", fg=C["green"])
-                        self._set_status(f"اكتمل فحص المخلفات، نحو {ar_size(total)} قابلة للتحرير", "ok")
+                        self.junkBusy = False
+                        self.busy(False)
+                        self.junkButtons(True)
+                        total = sum(r["size"] for r in self.junkRows.values() if r["kind"] != "review")
+                        self.junkSummary.config(
+                            text=f"اجمالي المخلفات القابلة للتنظيف نحو {arSize(total)}", fg=C["green"])
+                        self.setStatus(f"اكتمل فحص المخلفات، نحو {arSize(total)} قابلة للتحرير", "ok")
                         return
             except queue.Empty:
                 pass
@@ -1323,45 +1363,61 @@ class App(tk.Tk):
 
         self.after(100, poll)
 
-    def _add_junk_row(self, path, label, kind, size):
+    def addJunkRow(self, path, label, kind, size):
         if kind == "bin":
-            values = self._bin_row_values(size)
+            values = self.binRowValues(size)
         else:
-            values = (human_size(size), label, path)
-        item = self.junk_tree.insert("", "end", values=values,
-                                     tags=("even",) if len(self._junk_rows) % 2 else ())
-        self._junk_rows[item] = {"path": path, "kind": kind, "size": size, "label": label}
+            values = (humanSize(size), label, path)
+        item = self.junkTree.insert("", "end", values=values,
+                                     tags=("even",) if len(self.junkRows) % 2 else ())
+        self.junkRows[item] = {"path": path, "kind": kind, "size": size, "label": label}
 
-    def _clean_junk_rows(self, items):
-        rows = [self._junk_rows[i] for i in items if i in self._junk_rows]
+    def junkButtons(self, enabled):
+        self.junkScanBtn.config(state="normal" if enabled else "disabled")
+        self.junkCleanBtn.config(state="normal" if enabled and self.cleanableJunk() else "disabled")
+
+    def cleanableJunk(self):
+        return [i for i, r in self.junkRows.items() if r["kind"] == "clean" and r["size"] > 0]
+
+    def cleanAllJunk(self):
+        items = self.cleanableJunk()
+        if not items:
+            messagebox.showinfo("تنظيف المخلفات", "لا توجد مخلفات للتنظيف، اضغط فحص المخلفات اولا.")
+            return
+        self.cleanJunkRows(items)
+
+    def cleanJunkRows(self, items):
+        rows = [self.junkRows[i] for i in items if i in self.junkRows]
         if any(r["kind"] == "bin" for r in rows):
-            self._clean_recycle_bin()
+            self.cleanRecycleBin()
         review = [r for r in rows if r["kind"] == "review"]
         if review:
             messagebox.showinfo("راجعها بنفسك",
                                 "مجلد التنزيلات فيه ملفاتك الشخصية لذلك لا يحذفه البرنامج.\n"
                                 "سيتم فتحه لتراجعه وتحذف ما لا تحتاجه بنفسك.")
-            open_in_explorer(review[0]["path"])
+            openInExplorer(review[0]["path"])
         targets = [(i, r) for i, r in zip(items, rows) if r["kind"] == "clean"]
         if not targets:
             return
         total = sum(r["size"] for _, r in targets)
         names = "\n".join(f"  {r['label']}" for _, r in targets[:8])
+        if len(targets) > 8:
+            names += f"\n  و {len(targets) - 8} غيرها"
         if not messagebox.askyesno(
                 "تنظيف المخلفات",
                 f"سيتم حذف محتويات هذه المجلدات نهائيا:\n\n{names}\n\n"
-                f"الحجم نحو {ar_size(total)}. المجلدات نفسها تبقى، والملفات المستخدمة حاليا ستبقى.\n\n"
+                f"الحجم نحو {arSize(total)}. المجلدات نفسها تبقى، والملفات المستخدمة حاليا ستبقى.\n\n"
                 "متابعة؟", icon="warning"):
             return
-        self._busy(True)
-        self.junk_scan_btn.config(state="disabled")
-        self._set_status("جاري تنظيف المخلفات", "busy")
+        self.busy(True)
+        self.junkButtons(False)
+        self.setStatus("جاري تنظيف المخلفات", "busy")
         q = queue.Queue()
 
         def work():
             freed = skipped = 0
             for item, r in targets:
-                f, _, s = cleaner.clear(r["path"], cleaner.default_skip())
+                f, _, s = cleaner.clear(r["path"], cleaner.defaultSkip())
                 freed += f
                 skipped += s
                 q.put(("row", (item, cleaner.measure(r["path"])[0])))
@@ -1375,17 +1431,17 @@ class App(tk.Tk):
                     kind, payload = q.get_nowait()
                     if kind == "row":
                         item, size = payload
-                        if self.junk_tree.exists(item):
-                            r = self._junk_rows[item]
+                        if self.junkTree.exists(item):
+                            r = self.junkRows[item]
                             r["size"] = size
-                            self.junk_tree.item(item, values=(human_size(size), r["label"], r["path"]))
+                            self.junkTree.item(item, values=(humanSize(size), r["label"], r["path"]))
                     else:
                         freed, skipped = payload
-                        self._busy(False)
-                        self.junk_scan_btn.config(state="normal")
-                        self._refresh_drives()
-                        msg = f"تم تنظيف المخلفات وتحرير {ar_size(freed)}."
-                        self._set_status(msg, "ok")
+                        self.busy(False)
+                        self.junkButtons(True)
+                        self.refreshDrives()
+                        msg = f"تم تنظيف المخلفات وتحرير {arSize(freed)}."
+                        self.setStatus(msg, "ok")
                         if skipped:
                             msg += f"\n\nبقي {skipped:,} ملف لانه مستخدم حاليا او يحتاج صلاحيات مدير."
                         messagebox.showinfo("تنظيف المخلفات", msg)
@@ -1396,62 +1452,62 @@ class App(tk.Tk):
 
         self.after(100, poll)
 
-    def _tree_sel_path(self):
+    def treeSelPath(self):
         sel = self.tree.selection()
-        return self._tree_nodes.get(sel[0]) if sel else None
+        return self.treeNodes.get(sel[0]) if sel else None
 
-    def _files_sel_path(self):
-        sel = self.files_tree.selection()
+    def filesSelPath(self):
+        sel = self.filesTree.selection()
         if sel:
-            vals = self.files_tree.item(sel[0], "values")
+            vals = self.filesTree.item(sel[0], "values")
             return vals[3] if vals else None
         return None
 
-    def _dup_sel_path(self):
-        sel = self.dup_tree.selection()
+    def dupSelPath(self):
+        sel = self.dupTree.selection()
         if sel:
-            txt = self.dup_tree.item(sel[0], "text").strip()
+            txt = self.dupTree.item(sel[0], "text").strip()
             if txt and not txt.startswith("مجموعة"):
                 return txt
         return None
 
-    def _junk_path(self, item):
-        row = self._junk_rows.get(item)
+    def junkPath(self, item):
+        row = self.junkRows.get(item)
         if not row:
             return None
         return "__RECYCLE__" if row["kind"] == "bin" else row["path"]
 
-    def _junk_sel_path(self):
-        sel = self.junk_tree.selection()
-        return self._junk_path(sel[0]) if sel else None
+    def junkSelPath(self):
+        sel = self.junkTree.selection()
+        return self.junkPath(sel[0]) if sel else None
 
-    def _selected_paths(self):
+    def selectedPaths(self):
         tab = self.nb.current
         paths = []
         if tab == 0:
             for n in self.tree.selection():
-                p = self._tree_nodes.get(n)
+                p = self.treeNodes.get(n)
                 if p:
                     paths.append(p)
         elif tab == 1:
-            for item in self.files_tree.selection():
-                vals = self.files_tree.item(item, "values")
+            for item in self.filesTree.selection():
+                vals = self.filesTree.item(item, "values")
                 if vals:
                     paths.append(vals[3])
         elif tab == 2:
-            for item in self.dup_tree.selection():
-                txt = self.dup_tree.item(item, "text").strip()
+            for item in self.dupTree.selection():
+                txt = self.dupTree.item(item, "text").strip()
                 if txt and not txt.startswith("مجموعة"):
                     paths.append(txt)
         elif tab == 3:
-            for item in self.junk_tree.selection():
-                p = self._junk_path(item)
+            for item in self.junkTree.selection():
+                p = self.junkPath(item)
                 if p:
                     paths.append(p)
         return paths
 
-    def _open_selected(self):
-        paths = self._selected_paths()
+    def openSelected(self):
+        paths = self.selectedPaths()
         if not paths:
             messagebox.showinfo("معلومة", "اختر عنصرا اولا.")
             return
@@ -1459,29 +1515,29 @@ class App(tk.Tk):
         if p == "__RECYCLE__":
             os.startfile("shell:RecycleBinFolder")
         else:
-            open_in_explorer(p)
+            openInExplorer(p)
 
-    def _delete_selected(self):
-        paths = self._selected_paths()
+    def deleteSelected(self):
+        paths = self.selectedPaths()
         if not paths:
             messagebox.showinfo("معلومة", "اختر عنصرا او اكثر للحذف.")
             return
         if self.nb.current == 3:
-            self._clean_junk_rows(list(self.junk_tree.selection()))
+            self.cleanJunkRows(list(self.junkTree.selection()))
             return
         if "__RECYCLE__" in paths:
-            self._clean_recycle_bin()
+            self.cleanRecycleBin()
             paths = [p for p in paths if p != "__RECYCLE__"]
             if not paths:
                 return
-        blocked = [p for p in paths if is_protected(p)]
+        blocked = [p for p in paths if isProtected(p)]
         if blocked:
             messagebox.showerror("ممنوع",
                 "لا يمكن حذف مجلدات النظام او مجلداتك الاساسية:\n\n" + "\n".join(blocked[:5]))
-            paths = [p for p in paths if not is_protected(p)]
+            paths = [p for p in paths if not isProtected(p)]
             if not paths:
                 return
-        risky = [p for p in paths if self._is_system_file(p)]
+        risky = [p for p in paths if self.isSystemFile(p)]
         if risky:
             if not messagebox.askyesno("تحذير",
                     "العناصر التالية تبدو تابعة للنظام او لبرنامج مثبت:\n\n"
@@ -1498,13 +1554,13 @@ class App(tk.Tk):
                     total += os.path.getsize(p)
                 except OSError:
                     pass
-        mode = "سيتم نقلها الى سلة المهملات وتبقى قابلة للاستعادة" if HAS_SEND2TRASH \
+        mode = "سيتم نقلها الى سلة المهملات وتبقى قابلة للاستعادة" if hasSend2trash\
             else "سيتم حذفها نهائيا وغير قابلة للاستعادة"
         preview = "\n".join(f"  {p}" for p in paths[:8])
         if len(paths) > 8:
             preview += f"\n  و {len(paths) - 8} عنصر اخر"
         if not messagebox.askyesno("تأكيد الحذف",
-                f"عدد العناصر: {len(paths)}\nالحجم التقريبي: {ar_size(total)}\n\n"
+                f"عدد العناصر: {len(paths)}\nالحجم التقريبي: {arSize(total)}\n\n"
                 f"{preview}\n\n{mode}\n\nهل انت متأكد؟", icon="warning"):
             return
         errors, removed = [], {}
@@ -1516,68 +1572,68 @@ class App(tk.Tk):
                 except OSError:
                     size = 0
             try:
-                if HAS_SEND2TRASH:
+                if hasSend2trash:
                     send2trash(os.path.normpath(p))
                 else:
-                    self._hard_delete(p)
+                    self.hardDelete(p)
                 removed[p] = size
             except Exception as e:
                 errors.append(f"{p}: {e}")
         deleted = len(removed)
-        self._remove_deleted_from_views(list(removed))
-        self._apply_removed_sizes(removed)
-        self._refresh_drives()
-        msg = f"تم حذف {deleted} عنصر، حرر نحو {ar_size(sum(removed.values()))}."
+        self.removeDeletedFromViews(list(removed))
+        self.applyRemovedSizes(removed)
+        self.refreshDrives()
+        msg = f"تم حذف {deleted} عنصر، حرر نحو {arSize(sum(removed.values()))}."
         if errors:
             msg += f"\nفشل {len(errors)} عنصر، قد تحتاج صلاحيات مدير."
             messagebox.showwarning("اكتمل مع اخطاء", msg + "\n\n" + "\n".join(errors[:5]))
         else:
             messagebox.showinfo("تم", msg)
-        self._set_status(msg.split("\n")[0], "warn" if errors else "ok")
+        self.setStatus(msg.split("\n")[0], "warn" if errors else "ok")
 
     @staticmethod
-    def _is_system_file(path):
+    def isSystemFile(path):
         low = os.path.normpath(path).lower()
         win = os.environ.get("SystemRoot", r"C:\Windows").lower()
         if low.startswith(win) or "program files" in low:
-            if not fileinfo._is_junk_location(path):
+            if not fileinfo.isJunkLocation(path):
                 return True
         return False
 
     @staticmethod
-    def _hard_delete(path):
+    def hardDelete(path):
         if os.path.isdir(path):
             shutil.rmtree(path, ignore_errors=False)
         else:
             os.remove(path)
 
-    def _remove_deleted_from_views(self, paths):
+    def removeDeletedFromViews(self, paths):
         pset = set(os.path.normcase(os.path.normpath(p)) for p in paths)
 
         def gone(p):
             np = os.path.normcase(os.path.normpath(p))
             return np in pset or any(np.startswith(d.rstrip("\\") + "\\") for d in pset)
 
-        for item in self.files_tree.get_children():
-            vals = self.files_tree.item(item, "values")
+        for item in self.filesTree.get_children():
+            vals = self.filesTree.item(item, "values")
             if vals and gone(vals[3]):
-                self.files_tree.delete(item)
-        for parent in self.dup_tree.get_children():
-            for child in self.dup_tree.get_children(parent):
-                txt = self.dup_tree.item(child, "text").strip()
+                self.filesTree.delete(item)
+        for parent in self.dupTree.get_children():
+            for child in self.dupTree.get_children(parent):
+                txt = self.dupTree.item(child, "text").strip()
                 if txt and gone(txt):
-                    self.dup_tree.delete(child)
-        for node, p in list(self._tree_nodes.items()):
+                    self.dupTree.delete(child)
+        for node, p in list(self.treeNodes.items()):
             if gone(p):
                 try:
                     self.tree.delete(node)
                 except tk.TclError:
                     pass
-                del self._tree_nodes[node]
+                del self.treeNodes[node]
         if self.result:
             self.result["big_files"] = [(p, s) for p, s in self.result["big_files"] if not gone(p)]
 
-    def _apply_removed_sizes(self, removed):
+    def applyRemovedSizes(self, removed):
         """Subtract deleted sizes from every ancestor folder so the tree stays accurate."""
         if not self.result:
             return
@@ -1591,14 +1647,14 @@ class App(tk.Tk):
                 if up == parent:
                     break
                 parent = up
-        total = sizes.get(self.current_root, 0) or 1
-        for node, path in self._tree_nodes.items():
+        total = sizes.get(self.currentRoot, 0) or 1
+        for node, path in self.treeNodes.items():
             if path in sizes and self.tree.exists(node):
-                pct = 100 if path == self.current_root else sizes[path] / total * 100
-                self.tree.item(node, values=(human_size(sizes[path]), self._bar(pct)))
+                pct = 100 if path == self.currentRoot else sizes[path] / total * 100
+                self.tree.item(node, values=(humanSize(sizes[path]), self.barText(pct)))
 
 
-def enable_dpi_awareness():
+def enableDpiAwareness():
     try:
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
     except (AttributeError, OSError):
@@ -1609,13 +1665,13 @@ def enable_dpi_awareness():
 
 
 def main():
-    enable_dpi_awareness()
+    enableDpiAwareness()
     try:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("dvlinuxx.Cleanix")
     except Exception:
         pass
     app = App()
-    if not HAS_SEND2TRASH:
+    if not hasSend2trash:
         app.after(500, lambda: messagebox.showwarning(
             "تنبيه", "مكتبة send2trash غير مثبتة.\nالحذف سيكون نهائيا.\n"
                      "للتثبيت: pip install send2trash"))

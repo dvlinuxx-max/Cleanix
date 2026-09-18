@@ -2,10 +2,10 @@ import os
 import hashlib
 import time
 
-from cleaner import is_link
+from cleaner import isLink
 
 
-def _hash_file(path, partial=False, chunk=1024 * 1024):
+def hashFile(path, partial=False, chunk=1024 * 1024):
     h = hashlib.blake2b(digest_size=16)
     try:
         with open(path, "rb", buffering=0) as f:
@@ -23,7 +23,7 @@ def _hash_file(path, partial=False, chunk=1024 * 1024):
         return None
 
 
-def _unique_files(paths):
+def uniqueFiles(paths):
     """Drop paths that point at the same file (hardlinks, same file seen twice)."""
     seen, out = set(), []
     for p in paths:
@@ -40,20 +40,20 @@ def _unique_files(paths):
 
 class DuplicateEngine:
 
-    def __init__(self, root_path, min_size, progress_q, stop_event):
-        self.root = root_path
-        self.min_size = min_size
-        self.q = progress_q
-        self.stop = stop_event
+    def __init__(self, rootPath, minSize, progressQ, stopEvent):
+        self.root = rootPath
+        self.minSize = minSize
+        self.q = progressQ
+        self.stop = stopEvent
 
     def run(self):
         try:
-            self._find()
+            self.find()
         except Exception as e:
             self.q.put(("dup_error", str(e)))
 
-    def _find(self):
-        by_size = {}
+    def find(self):
+        bySize = {}
         scanned = 0
         last = time.time()
         stack = [self.root]
@@ -70,7 +70,7 @@ class DuplicateEngine:
             except OSError:
                 continue
             for e in entries:
-                if is_link(e):
+                if isLink(e):
                     continue
                 try:
                     if e.is_dir(follow_symlinks=False):
@@ -79,41 +79,41 @@ class DuplicateEngine:
                     sz = e.stat(follow_symlinks=False).st_size
                 except OSError:
                     continue
-                if sz < self.min_size:
+                if sz < self.minSize:
                     continue
-                by_size.setdefault(sz, []).append(e.path)
+                bySize.setdefault(sz, []).append(e.path)
                 scanned += 1
                 if time.time() - last > 0.2:
                     last = time.time()
                     self.q.put(("dup_progress", f"المسح: {scanned:,} ملف مرشح"))
 
-        candidates = {s: ps for s, ps in by_size.items() if len(ps) > 1}
+        candidates = {s: ps for s, ps in bySize.items() if len(ps) > 1}
 
         groups = {}
-        total_groups = len(candidates)
+        totalGroups = len(candidates)
         done = 0
         for sz, paths in candidates.items():
             if self.stop.is_set():
                 self.q.put(("dup_cancelled", None)); return
             done += 1
-            paths = _unique_files(paths)
+            paths = uniqueFiles(paths)
             if len(paths) < 2:
                 continue
             partial = {}
             for p in paths:
-                ph = _hash_file(p, partial=True)
+                ph = hashFile(p, partial=True)
                 if ph:
                     partial.setdefault((sz, ph), []).append(p)
             for key, plist in partial.items():
                 if len(plist) < 2:
                     continue
                 for p in plist:
-                    fh = _hash_file(p, partial=False)
+                    fh = hashFile(p, partial=False)
                     if fh:
                         groups.setdefault((sz, fh), []).append(p)
             if done % 5 == 0:
                 self.q.put(("dup_progress",
-                            f"تحليل البصمات: {done} من {total_groups} مجموعة حجم"))
+                            f"تحليل البصمات: {done} من {totalGroups} مجموعة حجم"))
 
         result = []
         wasted = 0
